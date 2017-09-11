@@ -1,0 +1,5 @@
+<resources>
+    <string name="appName">Speechy</string>
+    <string name="navigationDrawerOpen">Open navigation drawer</string>
+    <string name="navigationDrawerClose">Close navigation drawer</string>
+</resources>
