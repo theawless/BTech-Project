@@ -4,7 +4,7 @@
     android:id="@+id/mainContent"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.gobbledygook.theawless.speechy.MainFragment">
+    tools:context="com.gobbledygook.theawless.speechy.app.MainFragment">
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/recordFab"
