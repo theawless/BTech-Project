@@ -22,13 +22,13 @@ object Distance {
     fun tokhura(listA: List<Double>, listB: List<Double>): Double {
         val w = listOf(0.0, 1.0, 3.0, 7.0, 13.0, 19.0, 22.0, 25.0, 33.0, 42.0, 50.0, 56.0, 61.0)
         var d = 0.0
-        w.forEachIndexed { i, _ -> d += w[i] * (listA[i] - listB[i]).pow(2) }
+        listA.forEachIndexed { i, _ -> d += w[i] * (listA[i] - listB[i]).pow(2) }
         return d
     }
 }
 
 object Relation {
-    fun energy(list: List<Double>): Double = autoCorrelation(list, 0)[0]
+    fun energy(list: List<Double>) = autoCorrelation(list, 0)[0]
 
     fun autoCorrelation(list: List<Double>, p: Int): MutableList<Double> {
         val ac = MutableList(p + 1, { _ -> 0.0 })
