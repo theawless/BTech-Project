@@ -1,0 +1,23 @@
+\chapter{Related Works and Technologies} \label{ch:survey}
+
+\section{Phoneme Segmentation}
+
+The accurate segmentation and labeling of speech into phoneme units is useful for ASRs and speech synthesis. It is essential to embedded speech recognition system due to the constraint on the lexicon size \cite{1327109}. Development of an embedded ASR requires an accurately segmented speech database. Several approaches such as dynamic time warping \cite{phoneme-dtw} and viterbi forced alignment \cite{brugnara1993automatic} have been used for automatic segmentation.
+
+For embedded devices, we look forward to less computationally intensive methods for phoneme segmentation. \cite{986241} presents fourier analysis to segment phonemes based on energy jumps. The algorithm achieves an accuracy of 74\% comparable to more sophisticated HMM based methods, and with no over segmentation.
+
+\section{Native Development on Android}
+
+\cite{5600170} discusses a new component development approach by using Java Native Interface technology. The Native Development Kit (NDK) is a set of tools that allows writing native code for Android in C++. Speech processing and recognition requires fine grain control over memory management and speed, hence NDK is preferred over Dalvik Virtual Machine.
+
+\section{Distance Measures}
+
+Cepstral coefficients are widely used in speech recognition. Various distortion methods have been applied to find the distance between two coefficients.
+
+The Itakura Saito distance is a measure of the difference between a spectrum and the estimate of that spectrum. The cepstral distance between points p and q is the length of the line segment joining them. Also known as Euclidean distance, this distance causes uneven weighing of the different orders of coefficients, and hence is rarely used. \cite{1168478} compares these distances and concludes that Itakura Distance (a.k.a log likelihood ratio) performs better than Euclidean distance.
+
+\cite{1165058} brings out a novel distance measure, the Tohkura distance - a weighted distance that outperforms even Itakura Distance. It also mentions the Mahalanobis distance, a multi-dimensional generalization of the idea of measuring how many standard deviations away P is from the mean of D. The sensitivity introduced by the matrix inversion is one of the main difficulties for applying this distance to speech recognition.
+
+\section{Network Speech Recognition}
+
+In this mode of speech recognition, the feature extraction and recognition are both delegated to the network server. The server is capable of doing complex computation and returns extremely accurate results. The system can also be upgraded without changes to the local distribution. One of the major cons of this mode is the dependence on telephone network and the performance degradation caused by low bit rate codecs, which becomes sever in presence of transmission errors \cite{Kumar_rethinkingspeech}.
