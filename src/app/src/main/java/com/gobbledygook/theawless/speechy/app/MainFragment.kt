@@ -12,6 +12,8 @@ import com.gobbledygook.theawless.speechy.utils.SpeechConstants
 import com.gobbledygook.theawless.speechy.utils.Utils
 import com.gobbledygook.theawless.speechy.utils.UtilsConstants
 import kotlinx.android.synthetic.main.fragment_main.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.async
 
 class MainFragment : Fragment(), AudioRecorder.Listener {
     companion object {
@@ -27,8 +29,12 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
                 recordFab.setImageResource(R.drawable.mic_off)
                 snackbar.setText("Recording now...")
             } else {
-                recordFab.setImageResource(R.drawable.mic_on)
-                snackbar.setText("You have spoken: " + getWord())
+                recordFab.setImageResource(R.drawable.wait)
+                snackbar.setText("Crunching the numbers...")
+                async(UI) {
+                    snackbar.setText("You have spoken: '" + getWord() + "'")
+                    recordFab.setImageResource(R.drawable.mic_on)
+                }
             }
             audioRecorder.isRecording = value
         }
@@ -53,7 +59,7 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
         isRecording = !isRecording
     }
 
-    private fun getWord(): String {
+    private suspend fun getWord(): String {
         val wordIndex = getWordIndex((activity as MainActivity).speechDirPath)
         return SpeechConstants.WORDS[wordIndex]
     }
