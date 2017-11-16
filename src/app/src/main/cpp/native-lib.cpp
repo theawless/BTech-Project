@@ -42,11 +42,12 @@ static vector<vector<double>> get_coefficients(string filename, bool cache) {
 
 /// Gets map of vowels and their lpc coefficients.
 static vector<vector<vector<double>>> get_train_coefficients(string train_filename) {
-    vector<vector<vector<double>>> train_coefficients;
+    vector<vector<vector<double>>> train_coefficients(N_UTTERANCES * WORDS.size());
     for (int i = 0; i < N_UTTERANCES; ++i) {
         for (int j = 0; j < WORDS.size(); ++j) {
+            int k = j + i * N_UTTERANCES;
             string filename = train_filename + "_" + WORDS[j] + "_" + to_string(i);
-            train_coefficients.push_back(get_coefficients(filename, true));
+            train_coefficients[k] = get_coefficients(filename, true);
         }
     }
 
