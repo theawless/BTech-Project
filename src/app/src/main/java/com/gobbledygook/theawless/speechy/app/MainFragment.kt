@@ -33,7 +33,7 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
             audioRecorder.isRecording = value
         }
 
-    private val snackbar by lazy { Snackbar.make(mainContent, "Press the record button :)", Snackbar.LENGTH_INDEFINITE) }
+    private val snackbar by lazy { Snackbar.make(mainContent, "Press the record button", Snackbar.LENGTH_INDEFINITE) }
     private val audioRecorder by lazy {
         val audioRecorder = AudioRecorder(this)
         audioRecorder.recordPath = Utils.combinePaths((activity as MainActivity).speechDirPath, UtilsConstants.FILENAME)
@@ -54,9 +54,9 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
     }
 
     private fun getWord(): String {
-        val digit = getWordInner((activity as MainActivity).speechDirPath)
-        return SpeechConstants.DIGITS[digit]
+        val wordIndex = getWordIndex((activity as MainActivity).speechDirPath)
+        return SpeechConstants.WORDS[wordIndex]
     }
 
-    private external fun getWordInner(path: String): Int
+    private external fun getWordIndex(path: String): Int
 }

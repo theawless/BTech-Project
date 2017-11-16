@@ -12,7 +12,8 @@ object AudioConstants {
 }
 
 object SpeechConstants {
-    val DIGITS = arrayOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
+    const val N_UTTERANCES = 5
+    val WORDS = arrayOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 }
 
 object UtilsConstants {

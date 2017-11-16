@@ -23,6 +23,4 @@ object Converter {
 
 object Utils {
     fun combinePaths(path1: String, path2: String): String = File(File(path1), path2).path
-
-    fun getFilenameForIndex(index: Int): String = UtilsConstants.FILENAME + "_" + index.toString()
 }
