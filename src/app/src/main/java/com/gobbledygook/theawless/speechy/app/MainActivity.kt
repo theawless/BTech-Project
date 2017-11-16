@@ -22,8 +22,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private var writeExternalPermission = false
-    val speechDir by lazy {
-        if (writeExternalPermission) getExternalFilesDir(null) else filesDir
+    val speechDirPath by lazy {
+        if (writeExternalPermission) getExternalFilesDir(null).path else filesDir.path
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {

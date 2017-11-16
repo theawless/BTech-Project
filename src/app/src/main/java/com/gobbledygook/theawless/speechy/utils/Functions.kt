@@ -1,6 +1,8 @@
 package com.gobbledygook.theawless.speechy.utils
 
+import java.io.File
 import java.nio.ByteBuffer
+
 
 object Converter {
     fun shortArrayToByteArray(shortArray: ShortArray): ByteArray {
@@ -20,5 +22,7 @@ object Converter {
 }
 
 object Utils {
-    fun getFilenameForVowel(vowel: String): String = UtilsConstants.FILENAME + "_" + vowel
+    fun combinePaths(path1: String, path2: String): String = File(File(path1), path2).path
+
+    fun getFilenameForIndex(index: Int): String = UtilsConstants.FILENAME + "_" + index.toString()
 }

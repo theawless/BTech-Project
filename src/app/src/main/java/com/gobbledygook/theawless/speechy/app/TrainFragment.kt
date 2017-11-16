@@ -14,7 +14,6 @@ import com.gobbledygook.theawless.speechy.audio.AudioPlayer
 import com.gobbledygook.theawless.speechy.audio.AudioRecorder
 import com.gobbledygook.theawless.speechy.utils.SpeechConstants
 import com.gobbledygook.theawless.speechy.utils.Utils
-import java.io.File
 
 class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
     inner class TrainRecyclerViewAdapter(private val listItems: Array<String>) : RecyclerView.Adapter<TrainRecyclerViewAdapter.ViewHolder>() {
@@ -65,7 +64,7 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
             field = value
             if (value) {
                 isPlaying = false
-                audioRecorder.file = File((activity as MainActivity).speechDir, Utils.getFilenameForVowel(listItems[lastViewHolder!!.adapterPosition]))
+                audioRecorder.recordPath = Utils.combinePaths((activity as MainActivity).speechDirPath, Utils.getFilenameForIndex(lastViewHolder!!.adapterPosition))
             }
             lastViewHolder?.mic?.setImageResource(if (isRecording) R.drawable.mic_off else R.drawable.mic_on)
             audioRecorder.isRecording = value
@@ -76,14 +75,14 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
             field = value
             if (value) {
                 isRecording = false
-                audioPlayer.file = File((activity as MainActivity).speechDir, Utils.getFilenameForVowel(listItems[lastViewHolder!!.adapterPosition]))
+                audioPlayer.playPath = Utils.combinePaths((activity as MainActivity).speechDirPath, Utils.getFilenameForIndex(lastViewHolder!!.adapterPosition))
             }
             lastViewHolder?.play?.setImageResource(if (isPlaying) R.drawable.stop else R.drawable.play)
             audioPlayer.isPlaying = value
         }
 
     private var lastViewHolder: TrainRecyclerViewAdapter.ViewHolder? = null
-    private val listItems = SpeechConstants.VOWELS
+    private val listItems = SpeechConstants.DIGITS
 
     private val audioRecorder by lazy { AudioRecorder(this) }
     private val audioPlayer by lazy { AudioPlayer(this) }

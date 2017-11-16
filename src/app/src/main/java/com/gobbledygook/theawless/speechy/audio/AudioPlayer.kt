@@ -17,13 +17,13 @@ class AudioPlayer(private var listener: Listener) {
         var isPlaying: Boolean
     }
 
-    lateinit var file: File
+    lateinit var playPath: String
 
     companion object {
         private val TAG = AudioPlayer::class.java.simpleName
         private val bufferSize = AudioTrack.getMinBufferSize(AudioConstants.SAMPLE_RATE,
-                AudioConstants.OUT_CHANNEL,
-                AudioConstants.ENCODING)
+                                                             AudioConstants.OUT_CHANNEL,
+                                                             AudioConstants.ENCODING)
     }
 
     var isPlaying = false
@@ -34,17 +34,17 @@ class AudioPlayer(private var listener: Listener) {
         }
 
     private fun play() = async(UI) {
-        val inputStream = FileInputStream(file)
+        val inputStream = FileInputStream(File(playPath))
         val audioTrack = AudioTrack.Builder()
                 .setAudioAttributes(AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .build())
+                                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                                            .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                                            .build())
                 .setAudioFormat(AudioFormat.Builder()
-                        .setEncoding(AudioConstants.ENCODING)
-                        .setSampleRate(AudioConstants.SAMPLE_RATE)
-                        .setChannelMask(AudioConstants.OUT_CHANNEL)
-                        .build())
+                                        .setEncoding(AudioConstants.ENCODING)
+                                        .setSampleRate(AudioConstants.SAMPLE_RATE)
+                                        .setChannelMask(AudioConstants.OUT_CHANNEL)
+                                        .build())
                 .setBufferSizeInBytes(bufferSize)
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 .build()

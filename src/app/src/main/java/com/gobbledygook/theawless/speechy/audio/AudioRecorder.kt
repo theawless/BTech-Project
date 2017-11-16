@@ -10,19 +10,20 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import java.io.File
 import java.io.FileOutputStream
+import java.io.PrintWriter
 
 class AudioRecorder(private var listener: Listener) {
     interface Listener {
         var isRecording: Boolean
     }
 
-    lateinit var file: File
+    lateinit var recordPath: String
 
     companion object {
         private val TAG = AudioRecorder::class.java.simpleName
         private val bufferSize = AudioRecord.getMinBufferSize(AudioConstants.SAMPLE_RATE,
-                AudioConstants.IN_CHANNEL,
-                AudioConstants.ENCODING)
+                                                              AudioConstants.IN_CHANNEL,
+                                                              AudioConstants.ENCODING)
     }
 
     var isRecording = false
@@ -33,31 +34,35 @@ class AudioRecorder(private var listener: Listener) {
         }
 
     private fun record() = async(UI) {
-        val outputStream = FileOutputStream(file)
+        val outputStream = FileOutputStream(File(recordPath))
+        val printWriter = PrintWriter(File(recordPath + ".txt"))
         val audioRecord = AudioRecord(MediaRecorder.AudioSource.DEFAULT,
-                AudioConstants.SAMPLE_RATE,
-                AudioConstants.IN_CHANNEL,
-                AudioConstants.ENCODING,
-                bufferSize)
-        asyncRecord(audioRecord, outputStream).await()
+                                      AudioConstants.SAMPLE_RATE,
+                                      AudioConstants.IN_CHANNEL,
+                                      AudioConstants.ENCODING,
+                                      bufferSize)
+        asyncRecord(audioRecord, outputStream, printWriter).await()
         outputStream.close()
+        printWriter.close()
         audioRecord.release()
+
         isRecording = false
         listener.isRecording = false
     }
 
-    private fun asyncRecord(audioRecord: AudioRecord, outputStream: FileOutputStream) = async(CommonPool) {
+    private fun asyncRecord(audioRecord: AudioRecord, outputStream: FileOutputStream, printWriter: PrintWriter) = async(CommonPool) {
         audioRecord.startRecording()
         Log.v(TAG, "Start recording. Buffer size: $bufferSize")
 
         var bytesRead = 0L
         val audioData = ShortArray(bufferSize / 2)
-        while (isRecording && bytesRead < AudioConstants.MAX_BYTES) {
+        do {
             audioRecord.read(audioData, 0, audioData.size)
             val byteArray = Converter.shortArrayToByteArray(audioData)
             outputStream.write(byteArray)
+            audioData.forEach { printWriter.println(it.toDouble()) }
             bytesRead += byteArray.size.toLong()
-        }
+        } while (isRecording && bytesRead < AudioConstants.MAX_BYTES)
         audioRecord.stop()
         Log.v(TAG, "Stop recording. Bytes read: $bytesRead")
     }
