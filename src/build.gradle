@@ -1,14 +1,11 @@
 buildscript {
-    ext.kotlin_version = '1.2.0-rc-39'
+    ext.kotlin_version = '1.2.21'
     repositories {
         google()
         jcenter()
-        maven {
-            url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2'
-        }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.0'
+        classpath 'com.android.tools.build:gradle:3.0.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
     }
 }
@@ -18,23 +15,5 @@ allprojects {
     repositories {
         google()
         jcenter()
-        maven {
-            url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2'
-        }
     }
-}
-
-task customClean(type: Delete) {
-    delete rootProject.buildDir
-}
-clean.dependsOn customClean
-
-repositories {
-    maven {
-        url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2'
-    }
-}
-
-dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre8:$kotlin_version"
 }
