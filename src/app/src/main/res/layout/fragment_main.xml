@@ -6,6 +6,31 @@
     android:layout_height="match_parent"
     tools:context="com.gobbledygook.theawless.speechy.app.MainFragment">
 
+    <RadioGroup xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/radioRecogniserGroup"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/radioDirect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Direct" />
+
+        <RadioButton
+            android:id="@+id/radioHMM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HMM" />
+
+        <RadioButton
+            android:id="@+id/radioSphinx"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Sphinx" />
+    </RadioGroup>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/recordFab"
         android:layout_width="wrap_content"

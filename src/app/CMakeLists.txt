@@ -4,8 +4,8 @@ add_subdirectory(src/main/cpp/sr-lib)
 INCLUDE_DIRECTORIES(src/main/cpp/sr-lib/sr-lib/inc)
 link_directories(src/main/cpp/sr-lib)
 
-add_library(native-lib SHARED src/main/cpp/native-lib.cpp)
-find_library(log-lib log)
+add_library(direct SHARED src/main/cpp/direct.cpp)
+add_library(hmm SHARED src/main/cpp/hmm.cpp)
 
-target_link_libraries(native-lib ${log-lib})
-target_link_libraries(native-lib sr-lib)
+target_link_libraries(direct sr-lib)
+target_link_libraries(hmm sr-lib)

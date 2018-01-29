@@ -12,13 +12,16 @@ import com.gobbledygook.theawless.speechy.utils.SpeechConstants
 import com.gobbledygook.theawless.speechy.utils.Utils
 import com.gobbledygook.theawless.speechy.utils.UtilsConstants
 import kotlinx.android.synthetic.main.fragment_main.*
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+
 
 class MainFragment : Fragment(), AudioRecorder.Listener {
     companion object {
         init {
-            System.loadLibrary("native-lib")
+            System.loadLibrary("direct")
+            System.loadLibrary("hmm")
         }
     }
 
@@ -32,7 +35,7 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
                 recordFab.setImageResource(R.drawable.wait)
                 snackbar.setText("Crunching the numbers...")
                 async(UI) {
-                    snackbar.setText("You have spoken: '" + getWord() + "'")
+                    snackbar.setText("You have spoken: '" + getWord().await() + "'")
                     recordFab.setImageResource(R.drawable.mic_on)
                 }
             }
@@ -45,12 +48,15 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
         audioRecorder.recordPath = Utils.combinePaths((activity as MainActivity).speechDirPath, UtilsConstants.FILENAME)
         audioRecorder
     }
+    private var mode = SpeechConstants.RecognitionMode.DIRECT
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
             inflater.inflate(R.layout.fragment_main, container, false)
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        radioRecogniserGroup.check(R.id.radioDirect)
+        radioRecogniserGroup.setOnCheckedChangeListener { _, id -> onRadioButtonClicked(id) }
         recordFab.setOnClickListener { onActionButtonClick() }
         snackbar.show()
     }
@@ -59,10 +65,25 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
         isRecording = !isRecording
     }
 
-    private suspend fun getWord(): String {
-        val wordIndex = getWordIndex((activity as MainActivity).speechDirPath)
-        return SpeechConstants.WORDS[wordIndex]
+    private fun onRadioButtonClicked(id: Int) {
+        mode = when (id) {
+            R.id.radioDirect -> SpeechConstants.RecognitionMode.DIRECT
+            R.id.radioHMM -> SpeechConstants.RecognitionMode.HMM
+            R.id.radioSphinx -> SpeechConstants.RecognitionMode.SPHINX
+            else -> throw IllegalStateException("Radio selection is out of range")
+        }
     }
 
-    private external fun getWordIndex(path: String): Int
+    private fun getWord() = async(CommonPool) {
+        val wordIndex = when (mode) {
+            SpeechConstants.RecognitionMode.DIRECT -> getWordIndexDirect((activity as MainActivity).speechDirPath)
+            SpeechConstants.RecognitionMode.HMM -> getWordIndexHMM((activity as MainActivity).speechDirPath)
+            SpeechConstants.RecognitionMode.SPHINX -> TODO()
+        }
+        if (wordIndex == -1) "###"
+        else SpeechConstants.WORDS[wordIndex]
+    }
+
+    private external fun getWordIndexDirect(path: String): Int
+    private external fun getWordIndexHMM(path: String): Int
 }

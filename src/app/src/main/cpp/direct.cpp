@@ -1,6 +1,5 @@
 #include <iostream>
 #include <jni.h>
-#include <map>
 #include <limits>
 #include <string>
 
@@ -75,7 +74,7 @@ decide_word(const vector<vector<vector<double>>> &train_coefficients, const vect
 }
 
 extern "C" JNIEXPORT jint JNICALL
-Java_com_gobbledygook_theawless_speechy_app_MainFragment_getWordIndex(JNIEnv *env, jobject jobj, jstring jpath) {
+Java_com_gobbledygook_theawless_speechy_app_MainFragment_getWordIndexDirect(JNIEnv *env, jobject jobj, jstring jpath) {
     const char *cpath = env->GetStringUTFChars(jpath, NULL);
     string path = string(cpath) + "/" + "recording";
 
