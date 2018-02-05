@@ -45,7 +45,7 @@ static vector<vector<vector<double>>> get_train_coefficients(string train_filena
     for (int i = 0; i < N_UTTERANCES; ++i) {
         for (int j = 0; j < WORDS.size(); ++j) {
             int k = j + i * N_UTTERANCES;
-            string filename = train_filename + "_" + WORDS[j] + "_" + to_string(i);
+            string filename = train_filename + WORDS[j] + "_" + to_string(i);
             train_coefficients[k] = get_coefficients(filename, true);
         }
     }
@@ -76,10 +76,10 @@ decide_word(const vector<vector<vector<double>>> &train_coefficients, const vect
 extern "C" JNIEXPORT jint JNICALL
 Java_com_gobbledygook_theawless_speechy_app_MainFragment_getWordIndexDirect(JNIEnv *env, jobject jobj, jstring jpath) {
     const char *cpath = env->GetStringUTFChars(jpath, NULL);
-    string path = string(cpath) + "/" + "recording";
+    string path = string(cpath) + "/recording/";
 
     vector<vector<vector<double>>> train_coefficients = get_train_coefficients(path);
-    vector<vector<double>> test_coefficients = get_coefficients(path, false);
+    vector<vector<double>> test_coefficients = get_coefficients(path + "test", false);
     int word_index = decide_word(train_coefficients, test_coefficients);
 
     return word_index;

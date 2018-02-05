@@ -45,9 +45,7 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
 
     fun recording(viewHolder: TrainRecyclerViewAdapter.ViewHolder?) {
         val isRecording = if (lastViewHolder == viewHolder) !isRecording else true
-        if (isRecording) {
-            lastViewHolder?.play?.setImageResource(R.drawable.play)
-        }
+        if (isRecording) lastViewHolder?.play?.setImageResource(R.drawable.play)
         if (lastViewHolder != viewHolder) {
             lastViewHolder?.mic?.setImageResource(R.drawable.mic_on)
             lastViewHolder = viewHolder
@@ -57,9 +55,7 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
 
     fun playing(viewHolder: TrainRecyclerViewAdapter.ViewHolder?) {
         val isPlaying = if (lastViewHolder == viewHolder) !isPlaying else true
-        if (isPlaying) {
-            lastViewHolder?.mic?.setImageResource(R.drawable.mic_on)
-        }
+        if (isPlaying) lastViewHolder?.mic?.setImageResource(R.drawable.mic_on)
         if (lastViewHolder != viewHolder) {
             lastViewHolder?.play?.setImageResource(R.drawable.play)
             lastViewHolder = viewHolder
@@ -96,8 +92,8 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
     private fun getPathForListItem(lastViewHolder: TrainRecyclerViewAdapter.ViewHolder?): String {
         val wordIndex = lastViewHolder!!.adapterPosition
         val utteranceIndex = lastViewHolder.index.value
-        val filename = UtilsConstants.FILENAME + "_" + SpeechConstants.WORDS[wordIndex] + "_" + utteranceIndex.toString()
-        return Utils.combinePaths((activity as MainActivity).speechDirPath, filename)
+        val filename = SpeechConstants.WORDS[wordIndex] + "_" + utteranceIndex.toString()
+        return Utils.combinePaths((activity as MainActivity).speechDirPath, UtilsConstants.RECORD_FOLDER, filename)
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

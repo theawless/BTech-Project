@@ -21,9 +21,9 @@ class AudioRecorder(private var listener: Listener) {
 
     companion object {
         private val TAG = AudioRecorder::class.java.simpleName
-        private val bufferSize = AudioRecord.getMinBufferSize(AudioConstants.SAMPLE_RATE,
-                                                              AudioConstants.IN_CHANNEL,
-                                                              AudioConstants.ENCODING)
+        private val BUFFER_SIZE = AudioRecord.getMinBufferSize(AudioConstants.SAMPLE_RATE,
+                                                               AudioConstants.IN_CHANNEL,
+                                                               AudioConstants.ENCODING)
     }
 
     var isRecording = false
@@ -40,7 +40,7 @@ class AudioRecorder(private var listener: Listener) {
                                       AudioConstants.SAMPLE_RATE,
                                       AudioConstants.IN_CHANNEL,
                                       AudioConstants.ENCODING,
-                                      bufferSize)
+                                      BUFFER_SIZE)
         asyncRecord(audioRecord, outputStream, printWriter).await()
         outputStream.close()
         printWriter.close()
@@ -52,10 +52,10 @@ class AudioRecorder(private var listener: Listener) {
 
     private fun asyncRecord(audioRecord: AudioRecord, outputStream: FileOutputStream, printWriter: PrintWriter) = async(CommonPool) {
         audioRecord.startRecording()
-        Log.v(TAG, "Start recording. Buffer size: $bufferSize")
+        Log.v(TAG, "Start recording. Buffer size: $BUFFER_SIZE")
 
         var bytesRead = 0L
-        val audioData = ShortArray(bufferSize / 2)
+        val audioData = ShortArray(BUFFER_SIZE / 2)
         do {
             audioRecord.read(audioData, 0, audioData.size)
             val byteArray = Converter.shortArrayToByteArray(audioData)

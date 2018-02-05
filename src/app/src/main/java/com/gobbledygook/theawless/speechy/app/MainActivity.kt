@@ -23,17 +23,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private var writeExternalPermission = false
     val speechDirPath by lazy {
-        if (writeExternalPermission) getExternalFilesDir(null).path else filesDir.path
+        if (writeExternalPermission) getExternalFilesDir(null).path
+        else filesDir.path
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             REQUEST_PERMISSIONS_STATUS_CODE -> {
-                if (grantResults[1] == PackageManager.PERMISSION_GRANTED)
-                    writeExternalPermission = true
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    return
+                if (grantResults[1] == PackageManager.PERMISSION_GRANTED) writeExternalPermission = true
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) return
             }
         }
         finish()
@@ -47,30 +46,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
 
-        val toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigationDrawerOpen, R.string.navigationDrawerClose)
+        val toggle = ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.navigationDrawerOpen,
+                                           R.string.navigationDrawerClose)
         drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
-
         navigationView.setNavigationItemSelectedListener(this)
         fragmentManager.beginTransaction().replace(R.id.fragmentHolder, MainFragment()).commit()
     }
 
     override fun onBackPressed() {
-        if (drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            drawerLayout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
+        if (drawerLayout.isDrawerOpen(GravityCompat.START)) drawerLayout.closeDrawer(GravityCompat.START)
+        else super.onBackPressed()
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.home -> fragmentManager.beginTransaction().replace(R.id.fragmentHolder, MainFragment()).commit()
             R.id.train -> fragmentManager.beginTransaction().replace(R.id.fragmentHolder, TrainFragment()).commit()
-            R.id.github -> {
-                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/theawless/Speechy")))
-            }
+            R.id.github -> startActivity(Intent(Intent.ACTION_VIEW,
+                                                Uri.parse("https://github.com/theawless/Graduation-Project")))
         }
+
         drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }

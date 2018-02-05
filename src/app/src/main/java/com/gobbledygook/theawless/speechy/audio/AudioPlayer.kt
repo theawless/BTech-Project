@@ -21,9 +21,9 @@ class AudioPlayer(private var listener: Listener) {
 
     companion object {
         private val TAG = AudioPlayer::class.java.simpleName
-        private val bufferSize = AudioTrack.getMinBufferSize(AudioConstants.SAMPLE_RATE,
-                                                             AudioConstants.OUT_CHANNEL,
-                                                             AudioConstants.ENCODING)
+        private val BUFFER_SIZE = AudioTrack.getMinBufferSize(AudioConstants.SAMPLE_RATE,
+                                                              AudioConstants.OUT_CHANNEL,
+                                                              AudioConstants.ENCODING)
     }
 
     var isPlaying = false
@@ -45,7 +45,7 @@ class AudioPlayer(private var listener: Listener) {
                                         .setSampleRate(AudioConstants.SAMPLE_RATE)
                                         .setChannelMask(AudioConstants.OUT_CHANNEL)
                                         .build())
-                .setBufferSizeInBytes(bufferSize)
+                .setBufferSizeInBytes(BUFFER_SIZE)
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 .build()
         asyncPlay(audioTrack, inputStream).await()
@@ -57,11 +57,11 @@ class AudioPlayer(private var listener: Listener) {
 
     private fun asyncPlay(audioTrack: AudioTrack, inputStream: FileInputStream) = async(CommonPool) {
         audioTrack.play()
-        Log.v(TAG, "Start playing. Buffer size: $bufferSize")
+        Log.v(TAG, "Start playing. Buffer size: $BUFFER_SIZE")
 
         var bytesWritten = 0L
-        val byteArray = ByteArray(bufferSize)
-        while (isPlaying && inputStream.read(byteArray, 0, bufferSize) != -1) {
+        val byteArray = ByteArray(BUFFER_SIZE)
+        while (isPlaying && inputStream.read(byteArray, 0, BUFFER_SIZE) != -1) {
             val audioData = Converter.byteArrayToShortArray(byteArray)
             audioTrack.write(audioData, 0, audioData.size)
             bytesWritten += byteArray.size.toLong()

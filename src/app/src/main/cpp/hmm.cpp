@@ -13,7 +13,7 @@
 #define N_VALUE 5
 #define M_VALUE 16
 
-#define N_RETRAIN 2
+#define N_RETRAIN 3
 #define UNIVERSE_FILENAME RECORD_FOLDER "universe"
 #define CODEBOOK_FILENAME RECORD_FOLDER "codebook"
 
@@ -61,7 +61,7 @@ static vector<vector<double>> get_universe(string path) {
 
     for (int i = 0; i < WORDS.size(); ++i) {
         for (int j = 0; j < N_UTTERANCES; ++j) {
-            string filename = path + "recording" + "_" +  WORDS[i] + "_" + to_string(j);
+            string filename = path + WORDS[i] + "_" + to_string(j);
             vector<vector<double>> coefficients = get_coefficients(filename, true);
             for (int k = 0; k < coefficients.size(); ++k) {
                 universe.push_back(coefficients[k]);
@@ -148,7 +148,7 @@ static Model get_digit_model(const Model &train_model, const vector<vector<doubl
     vector<Model> utterance_models;
 
     for (int i = 0; i < N_UTTERANCES; ++i) {
-        string filename = path + "recording_" + WORDS[d] + "_" + to_string(i);
+        string filename = path + WORDS[d] + "_" + to_string(i);
         Model model = get_utterance_model(filename, train_model, codebook, t);
 
         utterance_models.push_back(model);
@@ -194,11 +194,11 @@ static int decide_word(const vector<Model> &models, const vector<int> observatio
 extern "C" JNIEXPORT jint JNICALL
 Java_com_gobbledygook_theawless_speechy_app_MainFragment_getWordIndexHMM(JNIEnv *env, jobject jobj, jstring jpath) {
     const char *cpath = env->GetStringUTFChars(jpath, NULL);
-    string path = string(cpath) + "/";
+    string path = string(cpath) + "/recording/";
 
     vector<vector<double>> codebook = get_codebook(path);
     vector<Model> models = get_models(codebook, path);
-    vector<int> observations = get_observations(path + "recording", codebook, false);
+    vector<int> observations = get_observations(path + "test", codebook, false);
     int word_index = decide_word(models, observations);
 
     return word_index;
