@@ -1,44 +1,52 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:layout_margin="@dimen/text_margin"
+    android:orientation="vertical"
+    tools:context="com.gobbledygook.theawless.speechy.app.TrainFragment">
 
-    <TextView
-        android:id="@+id/title"
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Utterance number"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+
+        <TextView
+            android:id="@+id/trainIndexLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:text="0"
+            android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+
+
+    </RelativeLayout>
+
+    <SeekBar
+        android:id="@+id/trainIndex"
+        style="@style/Widget.AppCompat.SeekBar.Discrete"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <Space
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="@dimen/text_margin"
-        android:textAppearance="@style/TextAppearance.AppCompat.Title" />
+        android:layout_margin="@dimen/divide_margin" />
 
-    <NumberPicker
-        android:id="@+id/index"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/trainList"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_margin="@dimen/text_margin"
-        android:layout_toStartOf="@id/play"
-        android:descendantFocusability="blocksDescendants" />
+        app:layoutManager="LinearLayoutManager"
+        tools:listitem="@layout/train_list_item" />
 
-    <ImageButton
-        android:id="@+id/mic"
-        style="@style/Widget.AppCompat.ImageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="@dimen/text_margin"
-        android:src="@drawable/mic_on" />
-
-    <ImageButton
-        android:id="@+id/play"
-        style="@style/Widget.AppCompat.ImageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true"
-        android:layout_toStartOf="@id/mic"
-        android:src="@drawable/play" />
-
-</RelativeLayout>
+</LinearLayout>
