@@ -42,12 +42,14 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
             audioRecorder.isRecording = value
         }
 
-    private val snackbar by lazy { Snackbar.make(mainContent, "Press the record button", Snackbar.LENGTH_INDEFINITE) }
+    private val snackbar by lazy { Snackbar.make(mainContent, "Press record button", Snackbar.LENGTH_INDEFINITE) }
     private val audioRecorder by lazy {
         val audioRecorder = AudioRecorder(this)
-        audioRecorder.recordPath = Utils.combinePaths((activity as MainActivity).speechDirPath, UtilsConstants.FILENAME)
+        audioRecorder.recordPath = Utils.combinePaths((activity as MainActivity).speechDirPath,
+                                                      UtilsConstants.RECORD_FOLDER, UtilsConstants.RECORD_FILENAME)
         audioRecorder
     }
+    private val sphinxDecoder by lazy { PocketSphinx((activity as MainActivity).speechDirPath) }
     private var mode = SpeechConstants.RecognitionMode.DIRECT
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
@@ -55,14 +57,15 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
 
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         radioRecogniserGroup.check(R.id.radioDirect)
         radioRecogniserGroup.setOnCheckedChangeListener { _, id -> onRadioButtonClicked(id) }
-        recordFab.setOnClickListener { onActionButtonClick() }
+        recordFab.setOnClickListener { isRecording = !isRecording }
+        recordFab.setOnLongClickListener {
+            isRecording = false
+            true
+        }
         snackbar.show()
-    }
-
-    private fun onActionButtonClick() {
-        isRecording = !isRecording
     }
 
     private fun onRadioButtonClicked(id: Int) {
@@ -78,12 +81,15 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
         val wordIndex = when (mode) {
             SpeechConstants.RecognitionMode.DIRECT -> getWordIndexDirect((activity as MainActivity).speechDirPath)
             SpeechConstants.RecognitionMode.HMM -> getWordIndexHMM((activity as MainActivity).speechDirPath)
-            SpeechConstants.RecognitionMode.SPHINX -> TODO()
+            SpeechConstants.RecognitionMode.SPHINX -> getWordIndexSphinx((activity as MainActivity).speechDirPath)
         }
         if (wordIndex == -1) "###"
         else SpeechConstants.WORDS[wordIndex]
     }
 
     private external fun getWordIndexDirect(path: String): Int
+
     private external fun getWordIndexHMM(path: String): Int
+
+    private fun getWordIndexSphinx(path: String): Int = SpeechConstants.WORDS.indexOf(sphinxDecoder.getWord(path))
 }
