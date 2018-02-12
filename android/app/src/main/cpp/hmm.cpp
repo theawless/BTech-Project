@@ -7,7 +7,7 @@
 #include "audio.h"
 #include "codebook.h"
 #include "hmm.h"
-#include "lpc.h"
+#include "lpcc.h"
 #include "utils.h"
 
 #define N_VALUE 5

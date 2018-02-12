@@ -5,7 +5,7 @@
 
 #include "audio.h"
 #include "trim.h"
-#include "lpc.h"
+#include "lpcc.h"
 #include "utils.h"
 
 using namespace std;
