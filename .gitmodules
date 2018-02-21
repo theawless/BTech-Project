@@ -1,3 +1,4 @@
 [submodule "sr-lib"]
 	path = sr-lib
 	url = https://github.com/theawless/sr-lib
+	branch = master
