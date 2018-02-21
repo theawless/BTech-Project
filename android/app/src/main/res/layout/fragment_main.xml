@@ -14,12 +14,6 @@
         android:orientation="vertical">
 
         <RadioButton
-            android:id="@+id/radioDirect"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Direct" />
-
-        <RadioButton
             android:id="@+id/radioHMM"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -27,7 +27,7 @@ class PocketSphinx(path: String) {
     }
 
     fun getWord(path: String): String {
-        val recordPath = Utils.combinePaths(path, UtilsConstants.RECORD_FOLDER, UtilsConstants.RECORD_FILENAME)
+        val recordPath = Utils.combinePaths(path, UtilsConstants.RECORD_FOLDER, UtilsConstants.RECORD_FILENAME + ".audio")
         val inputStream = FileInputStream(File(recordPath))
 
         decoder.startUtt()

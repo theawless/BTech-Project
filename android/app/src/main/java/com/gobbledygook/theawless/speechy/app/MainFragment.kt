@@ -20,7 +20,6 @@ import kotlinx.coroutines.experimental.async
 class MainFragment : Fragment(), AudioRecorder.Listener {
     companion object {
         init {
-            System.loadLibrary("direct")
             System.loadLibrary("hmm")
         }
     }
@@ -50,7 +49,7 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
         audioRecorder
     }
     private val sphinxDecoder by lazy { PocketSphinx((activity as MainActivity).speechDirPath) }
-    private var mode = SpeechConstants.RecognitionMode.DIRECT
+    private var mode = SpeechConstants.RecognitionMode.HMM
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
             inflater.inflate(R.layout.fragment_main, container, false)
@@ -58,7 +57,7 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        radioRecogniserGroup.check(R.id.radioDirect)
+        radioRecogniserGroup.check(R.id.radioHMM)
         radioRecogniserGroup.setOnCheckedChangeListener { _, id -> onRadioButtonClicked(id) }
         recordFab.setOnClickListener { isRecording = !isRecording }
         recordFab.setOnLongClickListener {
@@ -70,7 +69,6 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
 
     private fun onRadioButtonClicked(id: Int) {
         mode = when (id) {
-            R.id.radioDirect -> SpeechConstants.RecognitionMode.DIRECT
             R.id.radioHMM -> SpeechConstants.RecognitionMode.HMM
             R.id.radioSphinx -> SpeechConstants.RecognitionMode.SPHINX
             else -> throw IllegalStateException("Radio selection is out of range")
@@ -79,15 +77,12 @@ class MainFragment : Fragment(), AudioRecorder.Listener {
 
     private fun getWord() = async(CommonPool) {
         val wordIndex = when (mode) {
-            SpeechConstants.RecognitionMode.DIRECT -> getWordIndexDirect((activity as MainActivity).speechDirPath)
             SpeechConstants.RecognitionMode.HMM -> getWordIndexHMM((activity as MainActivity).speechDirPath)
             SpeechConstants.RecognitionMode.SPHINX -> getWordIndexSphinx((activity as MainActivity).speechDirPath)
         }
         if (wordIndex == -1) "###"
         else SpeechConstants.WORDS[wordIndex]
     }
-
-    private external fun getWordIndexDirect(path: String): Int
 
     private external fun getWordIndexHMM(path: String): Int
 

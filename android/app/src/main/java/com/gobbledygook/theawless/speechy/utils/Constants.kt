@@ -13,10 +13,10 @@ object AudioConstants {
 }
 
 object SpeechConstants {
-    const val N_UTTERANCES = 5
+    const val N_UTTERANCES = 16
     val WORDS = arrayOf("zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine")
 
-    enum class RecognitionMode { HMM, DIRECT, SPHINX }
+    enum class RecognitionMode { HMM, SPHINX }
 }
 
 object UtilsConstants {
