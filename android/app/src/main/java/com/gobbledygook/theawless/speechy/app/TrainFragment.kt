@@ -16,6 +16,8 @@ import com.gobbledygook.theawless.speechy.utils.SpeechConstants
 import com.gobbledygook.theawless.speechy.utils.Utils
 import com.gobbledygook.theawless.speechy.utils.UtilsConstants
 import kotlinx.android.synthetic.main.fragment_train.*
+import java.io.File
+import java.io.PrintWriter
 
 class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
     inner class TrainRecyclerViewAdapter(private val listItems: Array<String>) : RecyclerView.Adapter<TrainRecyclerViewAdapter.ViewHolder>() {
@@ -93,6 +95,15 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? =
             inflater.inflate(R.layout.fragment_train, container, false)
 
+    private fun createConfig() {
+        val configFile = PrintWriter(File(Utils.combinePaths((activity as MainActivity).speechDirPath,
+                                                             UtilsConstants.RECORD_FOLDER, "word.config")))
+        for (word in SpeechConstants.WORDS) {
+            configFile.println(word + ',' + SpeechConstants.N_UTTERANCES.toString())
+        }
+        configFile.close()
+    }
+
     override fun onViewCreated(view: View?, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         trainList.adapter = TrainRecyclerViewAdapter(SpeechConstants.WORDS)
@@ -106,5 +117,6 @@ class TrainFragment : Fragment(), AudioRecorder.Listener, AudioPlayer.Listener {
                 trainIndexLabel.text = progress.toString()
             }
         })
+        createConfig()
     }
 }

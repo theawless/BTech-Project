@@ -34,8 +34,8 @@ class AudioRecorder(private var listener: Listener) {
         }
 
     private fun record() = async(UI) {
-        val outputStream = FileOutputStream(File(recordPath))
-        val printWriter = PrintWriter(File(recordPath + ".txt"))
+        val outputStream = FileOutputStream(File(recordPath + ".audio"))
+        val printWriter = PrintWriter(File(recordPath + ".samples"))
         val audioRecord = AudioRecord(MediaRecorder.AudioSource.DEFAULT,
                                       AudioConstants.SAMPLE_RATE,
                                       AudioConstants.IN_CHANNEL,
