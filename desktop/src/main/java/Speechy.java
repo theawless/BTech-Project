@@ -193,6 +193,7 @@ public class Speechy extends JFrame {
         }
 
         addOutputMessage("Adding sentence: " + sentence);
+        onWordClean();
         onSentenceClean();
         addToItemList(sentence, sentenceList);
         populateTextArea(sentenceList, textAreaSentenceList);
