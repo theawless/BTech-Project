@@ -16,7 +16,6 @@ public class Speechy extends JFrame {
 
     private JPanel contentPane;
     private JTextField textFieldFolder;
-    private JButton buttonFolderSet;
     private JButton buttonFolderOpen;
     private JTextArea textAreaSetting;
     private JButton buttonSettingSet;
@@ -75,7 +74,6 @@ public class Speechy extends JFrame {
         textAreaOutput.setText("");
         progressBarRecord.setValue(100);
 
-        buttonFolderSet.addActionListener(e -> onFolderSet());
         buttonFolderOpen.addActionListener(e -> onFolderOpen());
         buttonSettingSet.addActionListener(e -> onSettingSet());
         buttonSettingReset.addActionListener(e -> onSettingReset());
@@ -94,20 +92,22 @@ public class Speechy extends JFrame {
         setState(State.INITIAL);
     }
 
-    private void onFolderSet() {
-        String folderPath = textFieldFolder.getText();
-        if (folderPath.isEmpty()) {
+    private void onFolderOpen() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        if (fileChooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) {
             return;
         }
 
         addOutputMessage("Setting up");
-        folder = new File(folderPath);
+        folder = fileChooser.getSelectedFile();
         if (!folder.isDirectory()) {
             addOutputMessage("Invalid folder");
             setState(State.INITIAL);
 
             return;
         }
+        textFieldFolder.setText(folder.getAbsolutePath());
         setting = new File(folder, "sr-lib.config");
         wordList = new File(folder, "sr-lib.words");
         sentenceList = new File(folder, "sr-lib.sentences");
@@ -115,15 +115,6 @@ public class Speechy extends JFrame {
         populateTextArea(wordList, textAreaWordList);
         populateTextArea(sentenceList, textAreaSentenceList);
         doActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
-    }
-
-    private void onFolderOpen() {
-        addOutputMessage("Opening folder");
-        try {
-            Desktop.getDesktop().open(folder);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void onSettingSet() {
@@ -197,7 +188,6 @@ public class Speechy extends JFrame {
 
     private void onSentenceAdd() {
         String sentence = textFieldSentence.getText();
-        String words[] = sentence.split("\\s+");
         if (sentence.isEmpty()) {
             return;
         }
@@ -206,6 +196,7 @@ public class Speechy extends JFrame {
         onSentenceClean();
         addToItemList(sentence, sentenceList);
         populateTextArea(sentenceList, textAreaSentenceList);
+        String words[] = sentence.split("\\s+");
         Arrays.stream(words).forEach((word) -> addToItemList(word, wordList));
         populateTextArea(wordList, textAreaWordList);
         doActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
@@ -381,9 +372,8 @@ public class Speechy extends JFrame {
                     textFieldDuration.setEnabled(true);
                     buttonSettingReset.setEnabled(checkFile(setting));
                     buttonSettingSet.setEnabled(true);
-                    buttonFolderOpen.setEnabled(true);
                 case INITIAL:
-                    buttonFolderSet.setEnabled(true);
+                    buttonFolderOpen.setEnabled(true);
                     textFieldFolder.setEnabled(true);
                 case WAITING:
             }
