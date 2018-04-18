@@ -1,8 +1,11 @@
+/// This file is the glue between native C++ code and Java code.
+/// Checkout https://github.com/thefangbear/JNI-By-Examples for more examples.
+
 #include "Speechy.h"
 
 #include <memory>
 #include <string>
-#include <tuple>
+#include <utility>
 #include <vector>
 
 #include "config.h"
@@ -15,11 +18,13 @@
 
 using namespace std;
 
+// need to be saved across calls
 string folder;
 vector<string> words;
 vector<vector<string>> sentences;
-
 Config config;
+
+// reuse the pointers by calling reset()
 unique_ptr<ModelTester> model_tester;
 unique_ptr<Recogniser> recogniser;
 
@@ -72,6 +77,7 @@ JNIEXPORT jstring JNICALL Java_Speechy_sentenceTest(JNIEnv *jenv, jobject jobj, 
 {
 	Logger::info("Sentence test");
 
+    // new sentence, hence clear context
 	if (jrestart)
 	{
 		recogniser->reset();
