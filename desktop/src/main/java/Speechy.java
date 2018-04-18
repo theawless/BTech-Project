@@ -1,12 +1,10 @@
-import javax.sound.sampled.*;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.net.URL;
 import java.util.Arrays;
 
 public class Speechy extends JFrame {
-    private static final AudioFormat AUDIO_FORMAT = new AudioFormat(16000, 16, 1, true, false);
-    private static final AudioFileFormat.Type AUDIO_TYPE = AudioFileFormat.Type.WAVE;
     private static final double DEFAULT_DURATION = 1.25;
     private static final String DEFAULT_NAME = "__test__";
 
@@ -19,6 +17,7 @@ public class Speechy extends JFrame {
     private JButton buttonFolderOpen;
     private JTextArea textAreaSetting;
     private JButton buttonSettingSet;
+    private JButton buttonSettingKeys;
     private JButton buttonSettingReset;
     private JTextField textFieldDuration;
     private JButton buttonDurationSet;
@@ -45,6 +44,7 @@ public class Speechy extends JFrame {
     private File sentenceList;
     private double duration = DEFAULT_DURATION;
     private String name = DEFAULT_NAME;
+    private WavRecorder wavRecorder = new WavRecorder();
     private State state;
 
     static {
@@ -76,6 +76,7 @@ public class Speechy extends JFrame {
 
         buttonFolderOpen.addActionListener(e -> onFolderOpen());
         buttonSettingSet.addActionListener(e -> onSettingSet());
+        buttonSettingKeys.addActionListener(e -> onSettingKeys());
         buttonSettingReset.addActionListener(e -> onSettingReset());
         buttonDurationSet.addActionListener(e -> onDurationSet());
         buttonNameSet.addActionListener(e -> onNameSet());
@@ -114,7 +115,7 @@ public class Speechy extends JFrame {
         populateTextArea(setting, textAreaSetting);
         populateTextArea(wordList, textAreaWordList);
         populateTextArea(sentenceList, textAreaSentenceList);
-        doActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
+        statefulActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
     }
 
     private void onSettingSet() {
@@ -125,13 +126,22 @@ public class Speechy extends JFrame {
             e.printStackTrace();
         }
         try (FileWriter fileWriter = new FileWriter(setting)) {
-            fileWriter.write(textAreaSetting.getText().trim().replace("\n", System.lineSeparator()));
+            fileWriter.write(textAreaSetting.getText().trim());
         } catch (IOException e) {
             e.printStackTrace();
         }
         onWordClean();
         onSentenceClean();
-        doActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
+        statefulActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
+    }
+
+    private void onSettingKeys() {
+        addOutputMessage("Show keys");
+        try {
+            Desktop.getDesktop().browse(new URL("https://github.com/theawless/sr-lib/blob/master/word/inc/config.h").toURI());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void onSettingReset() {
@@ -156,17 +166,18 @@ public class Speechy extends JFrame {
             return;
         }
 
+        // 1. clean 2. add 3. setup - for only words
         addOutputMessage("Adding word: " + word);
         onWordClean();
         addToItemList(word, wordList);
         populateTextArea(wordList, textAreaWordList);
-        doActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
-        doActionGUI(() -> record(getFilenameUnderFolder(getWordFilename(word))), State.FOLDER_SET);
+        statefulActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
+        statefulActionGUI(() -> record(getFilenameUnderFolder(getWordFilename(word))), State.FOLDER_SET);
     }
 
     private void onWordClean() {
         addOutputMessage("Cleaning word");
-        doActionGUI(() -> {
+        statefulActionGUI(() -> {
             String patterns[] = {".*\\.codebook", ".*\\.universe", ".*\\.features", ".*\\.observations", ".*\\.model.*"};
             Arrays.stream(folder.listFiles((f, p) -> Arrays.stream(patterns).anyMatch(p::matches))).forEach(File::delete);
         }, State.FOLDER_SET);
@@ -174,12 +185,12 @@ public class Speechy extends JFrame {
 
     private void onWordTrain() {
         addOutputMessage("Training word");
-        doActionGUI(this::wordTrain, State.WORD_TRAINED);
+        statefulActionGUI(this::wordTrain, State.WORD_TRAINED);
     }
 
     private void onWordTest() {
         addOutputMessage("Testing word");
-        doActionGUI(() -> {
+        statefulActionGUI(() -> {
             record(getFilenameUnderFolder(name));
             String word = wordTest(getFilenameUnderFolder(name));
             addOutputMessage("Tested word: " + word);
@@ -192,6 +203,7 @@ public class Speechy extends JFrame {
             return;
         }
 
+        // 1. clean 2. add 3. setup - for both words and sentences, because new words might be added in a sentence
         addOutputMessage("Adding sentence: " + sentence);
         onWordClean();
         onSentenceClean();
@@ -200,8 +212,8 @@ public class Speechy extends JFrame {
         String words[] = sentence.split("\\s+");
         Arrays.stream(words).forEach((word) -> addToItemList(word, wordList));
         populateTextArea(wordList, textAreaWordList);
-        doActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
-        doActionGUI(() -> {
+        statefulActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
+        statefulActionGUI(() -> {
             for (String word : words) {
                 addOutputMessage("Adding word: " + word);
                 record(getFilenameUnderFolder(getWordFilename(word)));
@@ -211,7 +223,7 @@ public class Speechy extends JFrame {
 
     private void onSentenceClean() {
         addOutputMessage("Cleaning sentence");
-        doActionGUI(() -> {
+        statefulActionGUI(() -> {
             String patterns[] = {".*\\.gram"};
             Arrays.stream(folder.listFiles((f, p) -> Arrays.stream(patterns).anyMatch(p::matches))).forEach(File::delete);
         }, State.WORD_TRAINED);
@@ -219,12 +231,12 @@ public class Speechy extends JFrame {
 
     private void onSentenceTrain() {
         addOutputMessage("Training sentence");
-        doActionGUI(this::sentenceTrain, State.SENTENCE_TRAINED);
+        statefulActionGUI(this::sentenceTrain, State.SENTENCE_TRAINED);
     }
 
     private void onSentenceTest() {
         addOutputMessage("Testing sentence");
-        doActionGUI(() -> {
+        statefulActionGUI(() -> {
             StringBuilder sentence = new StringBuilder();
             record(getFilenameUnderFolder(name));
             String word = sentenceTest(getFilenameUnderFolder(name), true);
@@ -238,11 +250,29 @@ public class Speechy extends JFrame {
         }, state);
     }
 
-    private boolean checkFile(File file) {
-        return file.exists() && file.length() > 0;
+    private void record(String filename) {
+        // show progress of recording
+        new Thread(() -> {
+            // frequency of refresh
+            long flicker = 5;
+            double progress = 0.0;
+            do {
+                try {
+                    Thread.sleep(flicker);
+                    progress += flicker / (duration * 10);
+                    int progressValue = (int) progress;
+                    SwingUtilities.invokeLater(() -> progressBarRecord.setValue(progressValue));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            } while (progress < 100);
+        }).start();
+
+        wavRecorder.record(filename, duration);
     }
 
     private String getFolderName() {
+        // file separator is expected in the end by sr-lib
         return folder.getAbsolutePath() + File.separator;
     }
 
@@ -253,10 +283,14 @@ public class Speechy extends JFrame {
     private String getWordFilename(String word) {
         for (int word_index = 0; ; ++word_index) {
             String filename = word + '_' + word_index;
-            if (!checkFile(new File(folder, filename + '.' + AUDIO_TYPE.getExtension()))) {
+            if (!checkFile(new File(folder, filename + '.' + wavRecorder.getExtension()))) {
                 return filename;
             }
         }
+    }
+
+    private boolean checkFile(File file) {
+        return file.exists() && file.length() > 0;
     }
 
     private void addToItemList(String item, File itemList) {
@@ -269,7 +303,8 @@ public class Speechy extends JFrame {
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(itemList))) {
             if (bufferedReader.lines().noneMatch(item::matches)) {
                 try (FileWriter fileWriter = new FileWriter(itemList, true)) {
-                    fileWriter.write((itemList.length() == 0 ? "" : System.lineSeparator()) + item);
+                    // do not add line separator if first item
+                    fileWriter.write((itemList.length() == 0 ? "" : '\n') + item);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -288,58 +323,24 @@ public class Speechy extends JFrame {
 
         textArea.setText("");
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
-            bufferedReader.lines().forEach((line) -> textArea.append(line + System.lineSeparator()));
+            bufferedReader.lines().forEach((line) -> textArea.append(line + '\n'));
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void record(String filename) {
-        DataLine.Info info = new DataLine.Info(TargetDataLine.class, AUDIO_FORMAT);
-        try (TargetDataLine line = (TargetDataLine) AudioSystem.getLine(info)) {
-            new Thread(() -> {
-                double progress = 0.0;
-                long flicker = 5;
-                do {
-                    try {
-                        Thread.sleep(flicker);
-                        progress += flicker / (duration * 10);
-                        int progressValue = (int) progress;
-                        SwingUtilities.invokeLater(() -> progressBarRecord.setValue(progressValue));
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                } while (progress < 100);
-            }).start();
-
-            new Thread(() -> {
-                try {
-                    Thread.sleep((long) (duration * 1000));
-                    line.stop();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-
-            line.open(AUDIO_FORMAT);
-            line.start();
-            AudioInputStream audioInputStream = new AudioInputStream(line);
-            AudioSystem.write(audioInputStream, AUDIO_TYPE, new File(filename + '.' + AUDIO_TYPE.getExtension()));
-        } catch (LineUnavailableException | IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void addOutputMessage(String message) {
+        // can be called from any thread
         SwingUtilities.invokeLater(() -> {
-            textAreaOutput.append(message + System.lineSeparator());
+            textAreaOutput.append(message + '\n');
             textAreaOutput.setCaretPosition(textAreaOutput.getDocument().getLength());
         });
     }
 
-    private void doActionGUI(Runnable action, State endState) {
-        setState(State.WAITING);
+    private void statefulActionGUI(Runnable action, State endState) {
+        // so users can't double start a task
         new Thread(() -> {
+            setState(State.WAITING);
             action.run();
             setState(endState);
         }).start();
@@ -352,7 +353,7 @@ public class Speechy extends JFrame {
                 case SENTENCE_TRAINED:
                 case WORD_TRAINED:
                 case FOLDER_SET:
-                    boolean wordTrainable = checkFile(wordList) && folder.listFiles((f, p) -> p.matches(".*\\." + AUDIO_TYPE.getExtension())).length > 0;
+                    boolean wordTrainable = checkFile(wordList) && folder.listFiles((f, p) -> p.matches(".*\\." + wavRecorder.getExtension())).length > 0;
                     boolean wordTrained = checkFile(wordList) && checkFile(new File(folder, "0.model"));
                     boolean sentenceTrainable = checkFile(sentenceList);
                     boolean sentenceTrained = wordTrained && checkFile(sentenceList) && checkFile(new File(folder, "0.gram"));
@@ -372,6 +373,7 @@ public class Speechy extends JFrame {
                     buttonDurationSet.setEnabled(true);
                     textFieldDuration.setEnabled(true);
                     buttonSettingReset.setEnabled(checkFile(setting));
+                    buttonSettingKeys.setEnabled(true);
                     buttonSettingSet.setEnabled(true);
                 case INITIAL:
                     buttonFolderOpen.setEnabled(true);
@@ -386,6 +388,7 @@ public class Speechy extends JFrame {
             if (component.getClass() == JPanel.class) {
                 setEnabledGUI((JPanel) component, enabled);
             } else if (component.getClass() == JButton.class || component.getClass() == JTextField.class) {
+                // only user actable elements
                 component.setEnabled(enabled);
             }
         }
