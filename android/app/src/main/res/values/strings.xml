@@ -1,5 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="appName">Speechy</string>
-    <string name="navigationDrawerOpen">Open navigation drawer</string>
-    <string name="navigationDrawerClose">Close navigation drawer</string>
+    <string name="mainText">Welcome to Speecy</string>
+    <string name="toggleItemTitle">Service</string>
+    <string name="permissionNotGratedToast">Permissions not granted</string>
+
 </resources>
