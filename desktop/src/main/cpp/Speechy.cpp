@@ -8,13 +8,13 @@
 #include <utility>
 #include <vector>
 
+#include "file-io.h"
 #include "config.h"
 #include "gram-trainer.h"
 #include "logger.h"
 #include "model-tester.h"
 #include "model-trainer.h"
 #include "recogniser.h"
-#include "utils.h"
 
 using namespace std;
 
@@ -32,14 +32,14 @@ JNIEXPORT void JNICALL Java_Speechy_setup(JNIEnv *jenv, jobject jobj, jstring jf
 {
 	Logger::info("Setup");
 
-	folder = jenv->GetStringUTFChars(jfolder, NULL);
+	folder = jenv->GetStringUTFChars(jfolder, nullptr);
 	const string words_filename = folder + "sr-lib.words";
 	const string sentences_filename = folder + "sr-lib.sentences";
 	const string config_filename = folder + "sr-lib.config";
 
-	words = Utils::get_vector_from_file<string>(words_filename);
-	sentences = Utils::get_matrix_from_file<string>(sentences_filename, ' ');
-	config = Utils::get_item_from_file<Config>(config_filename);
+	words = FileIO::get_vector_from_file<string>(words_filename);
+	sentences = FileIO::get_matrix_from_file<string>(sentences_filename, ' ');
+	config = FileIO::get_item_from_file<Config>(config_filename);
 
 	model_tester.reset(ModelTester::Builder(folder, config).build().release());
 	recogniser.reset(Recogniser::Builder(folder, words, sentences, config).build().release());
@@ -57,7 +57,7 @@ JNIEXPORT jstring JNICALL Java_Speechy_wordTest(JNIEnv *jenv, jobject jobj, jstr
 {
 	Logger::info("Word test");
 
-	const string filename = jenv->GetStringUTFChars(jfilename, NULL);
+	const string filename = jenv->GetStringUTFChars(jfilename, nullptr);
 	const pair<bool, vector<double>> scores = model_tester->test(filename);
 	const int word_index = max_element(scores.second.begin(), scores.second.end()) - scores.second.begin();
 	const string word = !scores.first || scores.second[word_index] == 0.0 ? string() : words[word_index];
@@ -83,7 +83,7 @@ JNIEXPORT jstring JNICALL Java_Speechy_sentenceTest(JNIEnv *jenv, jobject jobj, 
 		recogniser->reset();
 	}
 
-	const string filename = jenv->GetStringUTFChars(jfilename, NULL);
+	const string filename = jenv->GetStringUTFChars(jfilename, nullptr);
 	const pair<bool, string> result = recogniser->recognise(filename);
 
 	return jenv->NewStringUTF(result.first ? result.second.c_str() : string().c_str());
