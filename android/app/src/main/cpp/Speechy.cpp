@@ -4,10 +4,10 @@
 #include <utility>
 #include <vector>
 
+#include "file-io.h"
 #include "config.h"
 #include "logger.h"
 #include "recogniser.h"
-#include "utils.h"
 
 using namespace std;
 
@@ -18,15 +18,15 @@ Java_com_gobbledygook_theawless_speechy_FloatingService_setup(JNIEnv *jenv, jobj
 {
     Logger::info("Setup");
 
-    const string folder = jenv->GetStringUTFChars(jfolder, NULL);
+    const string folder = jenv->GetStringUTFChars(jfolder, nullptr);
     const string words_filename = folder + "sr-lib.words";
     const string sentences_filename = folder + "sr-lib.sentences";
     const string config_filename = folder + "sr-lib.config";
 
-    const vector<string> words = Utils::get_vector_from_file<string>(words_filename);
-    const vector<vector<string>> sentences = Utils::get_matrix_from_file<string>(sentences_filename,
+    const vector<string> words = FileIO::get_vector_from_file<string>(words_filename);
+    const vector<vector<string>> sentences = FileIO::get_matrix_from_file<string>(sentences_filename,
                                                                                  ' ');
-    const Config config = Utils::get_item_from_file<Config>(config_filename);
+    const Config config = FileIO::get_item_from_file<Config>(config_filename);
 
     recogniser.reset(Recogniser::Builder(folder, words, sentences, config).build().release());
 }
@@ -41,7 +41,7 @@ Java_com_gobbledygook_theawless_speechy_FloatingService_recognise(JNIEnv *jenv, 
         recogniser->reset();
     }
 
-    const string filename = jenv->GetStringUTFChars(jfilename, NULL);
+    const string filename = jenv->GetStringUTFChars(jfilename, nullptr);
     const pair<bool, string> result = recogniser->recognise(filename);
 
     return jenv->NewStringUTF(result.first ? result.second.c_str() : string().c_str());
