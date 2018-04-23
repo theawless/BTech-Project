@@ -6,11 +6,15 @@ import android.media.MediaRecorder
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.ByteBuffer
 
 class WavRecorder {
     companion object {
-        private const val N_CHANNEL = AudioFormat.CHANNEL_IN_MONO
         private const val HZ_SAMPLE = 16000
+    }
+
+    fun getExtension(): String {
+        return ".wav"
     }
 
     fun record(filename: String, duration: Double) {
@@ -25,10 +29,10 @@ class WavRecorder {
             it.writeBytes("fmt ")
             it.writeInt(java.lang.Integer.reverseBytes(16))
             it.writeShort(java.lang.Short.reverseBytes(1).toInt())
-            it.writeShort(java.lang.Short.reverseBytes(N_CHANNEL.toShort()).toInt())
+            it.writeShort(java.lang.Short.reverseBytes(1).toInt())
             it.writeInt(java.lang.Integer.reverseBytes(HZ_SAMPLE))
-            it.writeInt(java.lang.Integer.reverseBytes((HZ_SAMPLE * N_CHANNEL * 16 / 8)))
-            it.writeShort(java.lang.Short.reverseBytes((N_CHANNEL * 16 / 8).toShort()).toInt())
+            it.writeInt(java.lang.Integer.reverseBytes((HZ_SAMPLE * 1 * 16 / 8)))
+            it.writeShort(java.lang.Short.reverseBytes(1 * 16 / 8).toInt())
             it.writeShort(java.lang.Short.reverseBytes(16).toInt())
 
             // data
@@ -39,13 +43,13 @@ class WavRecorder {
     }
 
     private fun getAudio(bytesToRead: Int): ByteArray {
-        val audioData = ByteArray(bytesToRead)
-        val audioRecord = AudioRecord(MediaRecorder.AudioSource.DEFAULT, HZ_SAMPLE, N_CHANNEL, AudioFormat.ENCODING_PCM_16BIT,
-                                      AudioRecord.getMinBufferSize(HZ_SAMPLE, N_CHANNEL, AudioFormat.ENCODING_PCM_16BIT))
+        val audioData = ByteBuffer.allocateDirect(bytesToRead)
+        val audioRecord = AudioRecord(MediaRecorder.AudioSource.DEFAULT, HZ_SAMPLE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT,
+                                      AudioRecord.getMinBufferSize(HZ_SAMPLE, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT))
         audioRecord.startRecording()
-        audioRecord.read(audioData, 0, bytesToRead)
+        audioRecord.read(audioData, bytesToRead, AudioRecord.READ_BLOCKING)
         audioRecord.stop()
         audioRecord.release()
-        return audioData
+        return audioData.array()
     }
 }
