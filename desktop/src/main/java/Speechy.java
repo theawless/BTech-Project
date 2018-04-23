@@ -258,10 +258,10 @@ public class Speechy extends JFrame {
             double progress = 0.0;
             do {
                 try {
-                    Thread.sleep(flicker);
                     progress += flicker / (duration * 10);
                     int progressValue = (int) progress;
                     SwingUtilities.invokeLater(() -> progressBarRecord.setValue(progressValue));
+                    Thread.sleep(flicker);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
