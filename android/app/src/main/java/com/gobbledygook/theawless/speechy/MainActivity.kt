@@ -9,7 +9,12 @@ import android.os.Bundle
 import android.provider.Settings
 import android.view.Menu
 import android.widget.CheckBox
+import android.widget.RadioButton
 import android.widget.Toast
+import kotlinx.android.synthetic.main.activity.*
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import java.io.File
 
 
 class MainActivity : Activity() {
@@ -18,12 +23,50 @@ class MainActivity : Activity() {
         private const val PERMISSIONS_STATUS_CODE = 200
     }
 
+    private val words by lazy {
+        val file = File(Functions.getFilename(this, "sr-lib.words"))
+        file.createNewFile()
+        file.readLines()
+    }
+    private val wavRecorder = WavRecorder()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity)
         requestPermissions()
         stopService(Intent(applicationContext, FloatingService::class.java))
+
+        recordRoundProgress.statefulActionGUI {
+            for (word in words) {
+                val radio = RadioButton(this)
+                launch(UI) {
+                    radio.text = word
+                    wordRadioGroup.addView(radio)
+                    wordRadioGroup.check(radio.id)
+                }
+            }
+        }
+        recordRoundProgress.setOnClickListener {
+            val word = words[wordRadioGroup.indexOfChild(findViewById(wordRadioGroup.checkedRadioButtonId))]
+            recordRoundProgress.statefulActionGUI {
+                var index = 0
+                while (File(Functions.getFilename(this, "${word}_$index${wavRecorder.getExtension()}")).exists()) {
+                    index++
+                }
+                recordRoundProgress.start(Constants.RECORD_DURATION)
+                wavRecorder.record(Functions.getFilename(this, "${word}_$index"), Constants.RECORD_DURATION)
+            }
+        }
+        recordRoundProgress.setOnLongClickListener {
+            recordRoundProgress.statefulActionGUI {
+                train(Functions.getFolder(this))
+            }
+            true
+        }
     }
+
+    // only for testing purposes
+    private external fun train(folder: String)
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
@@ -61,6 +104,7 @@ class MainActivity : Activity() {
         (menu.findItem(R.id.toggleItem).actionView as CheckBox).setOnCheckedChangeListener { _, checked ->
             if (checked) {
                 startService(Intent(applicationContext, FloatingService::class.java))
+                finish()
             } else {
                 stopService(Intent(applicationContext, FloatingService::class.java))
             }
