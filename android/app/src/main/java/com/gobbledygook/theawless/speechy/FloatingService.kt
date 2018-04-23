@@ -1,10 +1,8 @@
 package com.gobbledygook.theawless.speechy
 
-import android.Manifest
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.graphics.PixelFormat
 import android.os.IBinder
@@ -12,34 +10,20 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import android.widget.ProgressBar
 import android.widget.Toast
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.delay
 import kotlinx.coroutines.experimental.launch
-import java.io.File
-import java.util.concurrent.TimeUnit
-
 
 class FloatingService : Service() {
     companion object {
         private const val RECORD_FILENAME: String = "__test__"
-        private const val RECORD_DURATION: Double = 1.25
     }
 
     private val windowManager by lazy {
         getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
-    private val folder by lazy {
-        if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-            getExternalFilesDir(null).path!!
-        } else {
-            filesDir.path!!
-        }
-    }
     private val floater by lazy {
-        ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+        RoundProgress(this)
     }
     private val toast by lazy {
         Toast.makeText(this, "", Toast.LENGTH_LONG)
@@ -55,8 +39,8 @@ class FloatingService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        statefulActionGUI {
-            setup(folder + File.separator)
+        floater.statefulActionGUI {
+            setup(Functions.getFolder(this))
         }
 
         val params = WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT,
@@ -69,7 +53,6 @@ class FloatingService : Service() {
         params.y = Resources.getSystem().displayMetrics.heightPixels / 2
         windowManager.addView(floater, params)
 
-        floater.progressDrawable = getDrawable(R.drawable.progress)
         floater.setOnClickListener {
             sentenceTest()
         }
@@ -99,56 +82,35 @@ class FloatingService : Service() {
     }
 
     private fun sentenceTest() {
-        statefulActionGUI {
+        val filename = Functions.getFilename(this, RECORD_FILENAME)
+        floater.statefulActionGUI {
             toastShow("")
-            do {
-                record()
-                val word = recognise(getTestFilename(), true)
+
+            record(filename)
+            var word = recognise(filename, true)
+            while (!word.isEmpty()) {
                 sentence.add(word)
                 toastShow(sentence.joinToString(" "))
-                val done = actionPerformer.perform(sentence)
-            } while (!done && !word.isEmpty())
+                if (actionPerformer.perform(sentence)) {
+                    break
+                }
+                record(filename)
+                word = recognise(filename, false)
+            }
 
             sentence.clear()
         }
     }
 
-    private fun record() {
-        launch(UI) {
-            val flicker = 5
-            var progress = 0.0
-            do {
-                delay(flicker.toLong(), TimeUnit.MILLISECONDS)
-                progress += flicker / (RECORD_DURATION * 10)
-                floater.progress = progress.toInt()
-            } while (progress < 100)
-        }
-
-        audioRecorder.record(getTestFilename(), RECORD_DURATION)
-    }
-
-    private fun getTestFilename(): String {
-        return "$folder${File.separator}$RECORD_FILENAME"
-    }
-
-    private fun statefulActionGUI(action: () -> Unit) {
-        launch(CommonPool) {
-            setState(false)
-            action()
-            setState(true)
-        }
+    private fun record(filename: String) {
+        floater.start(Constants.RECORD_DURATION)
+        audioRecorder.record(filename, Constants.RECORD_DURATION)
     }
 
     private fun toastShow(text: String) {
         launch(UI) {
             toast.setText(text)
             toast.show()
-        }
-    }
-
-    private fun setState(enabled: Boolean) {
-        launch(UI) {
-            floater.isEnabled = enabled
         }
     }
 
