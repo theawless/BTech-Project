@@ -1,5 +1,6 @@
 package com.gobbledygook.theawless.speechy
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.content.Intent
@@ -8,11 +9,16 @@ import android.media.AudioManager
 import android.net.Uri
 import android.net.wifi.WifiManager
 import android.provider.Settings
+import android.view.KeyEvent
 import kotlin.math.max
 import kotlin.math.min
 
+
 class ActionPerformer(private val context: Context) {
     fun perform(action: List<String>): Boolean {
+        if (action.size > 2) {
+            return false
+        }
         when (action) {
             listOf("bluetooth", "on") -> toggleBluetooth(true)
             listOf("bluetooth", "off") -> toggleBluetooth(false)
@@ -24,10 +30,10 @@ class ActionPerformer(private val context: Context) {
             listOf("call", "emergency") -> callPhone("100")
             listOf("volume", "up") -> changeAudio(AudioManager.ADJUST_RAISE)
             listOf("volume", "down") -> changeAudio(AudioManager.ADJUST_LOWER)
-            listOf("brightness", "up") -> setBrightness(255)
-            listOf("brightness", "down") -> setBrightness(0)
+            listOf("brightness", "up") -> changeBrightness(true)
+            listOf("brightness", "down") -> changeBrightness(false)
             listOf("open", "browser") -> openApp("com.android.chrome")
-            listOf("open", "calendar") -> openApp("com.android.calendar")
+            listOf("open", "calendar") -> openApp("com.google.android.calendar")
             listOf("music", "play") -> handleMusic("play")
             listOf("music", "pause") -> handleMusic("pause")
             listOf("music", "next") -> handleMusic("next")
@@ -51,21 +57,38 @@ class ActionPerformer(private val context: Context) {
         audioManager.adjustVolume(mode, AudioManager.FLAG_PLAY_SOUND)
     }
 
-    private fun setBrightness(value: Int) {
-        val brightness = max(0, min(value, 255))
-        Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, brightness)
+    private fun changeBrightness(mode: Boolean) {
+        Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE, Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL)
+        val brightness = Settings.System.getInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS)
+        val newBrightness = max(0, min(brightness + if (mode) 50 else -50, 255))
+        Settings.System.putInt(context.contentResolver, Settings.System.SCREEN_BRIGHTNESS, newBrightness)
     }
 
     private fun openApp(code: String) {
-        context.startActivity(Intent(code))
+        context.startActivity(context.packageManager.getLaunchIntentForPackage(code))
     }
 
+    @SuppressLint("MissingPermission")
     private fun callPhone(phone: String) {
         context.startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$phone")))
     }
 
     private fun handleMusic(mode: String) {
-        context.startActivity(Intent("com.android.music.musicservicecommand").putExtra("command", mode))
+        val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
+        when (mode) {
+            "play" -> {
+                val event = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY)
+                audioManager.dispatchMediaKeyEvent(event)
+            }
+            "pause" -> {
+                val event = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PAUSE)
+                audioManager.dispatchMediaKeyEvent(event)
+            }
+            "next" -> {
+                val event = KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_NEXT)
+                audioManager.dispatchMediaKeyEvent(event)
+            }
+        }
     }
 
     private fun toggleFlashLight(enable: Boolean) {
@@ -75,7 +98,7 @@ class ActionPerformer(private val context: Context) {
 
     private fun toggleWiFi(enable: Boolean) {
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
-        wifiManager.isWifiEnabled = true
+        wifiManager.isWifiEnabled = enable
     }
 
     private fun stopService() {
