@@ -12,8 +12,10 @@ import android.widget.CheckBox
 import android.widget.RadioButton
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity.*
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import java.io.File
 
 
@@ -30,36 +32,45 @@ class MainActivity : Activity() {
     }
     private val wavRecorder = WavRecorder()
 
+    init {
+        System.loadLibrary("Speechy")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity)
         requestPermissions()
         stopService(Intent(applicationContext, FloatingService::class.java))
 
-        recordRoundProgress.statefulActionGUI {
-            for (word in words) {
-                val radio = RadioButton(this)
-                launch(UI) {
-                    radio.text = word
-                    wordRadioGroup.addView(radio)
-                    wordRadioGroup.check(radio.id)
-                }
-            }
+        for (word in words) {
+            val radio = RadioButton(this)
+            radio.text = word
+            wordRadioGroup.addView(radio)
+            wordRadioGroup.check(radio.id)
         }
+        recordRoundProgress.setState(true)
         recordRoundProgress.setOnClickListener {
             val word = words[wordRadioGroup.indexOfChild(findViewById(wordRadioGroup.checkedRadioButtonId))]
-            recordRoundProgress.statefulActionGUI {
-                var index = 0
-                while (File(Functions.getFilename(this, "${word}_$index${wavRecorder.getExtension()}")).exists()) {
-                    index++
-                }
+            var index = 0
+            while (File(Functions.getFilename(this, "${word}_$index${wavRecorder.getExtension()}")).exists()) {
+                index++
+            }
+            launch(UI) {
+                recordRoundProgress.setState(false)
                 recordRoundProgress.start(Constants.RECORD_DURATION)
-                wavRecorder.record(Functions.getFilename(this, "${word}_$index"), Constants.RECORD_DURATION)
+                withContext(CommonPool) {
+                    wavRecorder.record(Functions.getFilename(this@MainActivity, "${word}_$index"), Constants.RECORD_DURATION)
+                }
+                recordRoundProgress.setState(true)
             }
         }
         recordRoundProgress.setOnLongClickListener {
-            recordRoundProgress.statefulActionGUI {
-                train(Functions.getFolder(this))
+            launch(UI) {
+                recordRoundProgress.setState(false)
+                withContext(CommonPool) {
+                    train(Functions.getFolder(this@MainActivity))
+                }
+                recordRoundProgress.setState(true)
             }
             true
         }

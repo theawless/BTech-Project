@@ -11,8 +11,10 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 
 class FloatingService : Service() {
     companion object {
@@ -29,7 +31,6 @@ class FloatingService : Service() {
         Toast.makeText(this, "", Toast.LENGTH_LONG)
     }
     private val audioRecorder = WavRecorder()
-    private var sentence = mutableListOf<String>()
     private val actionPerformer = ActionPerformer(this)
 
     init {
@@ -39,8 +40,12 @@ class FloatingService : Service() {
     override fun onCreate() {
         super.onCreate()
 
-        floater.statefulActionGUI {
-            setup(Functions.getFolder(this))
+        launch(UI) {
+            floater.setState(false)
+            withContext(CommonPool) {
+                setup(Functions.getFolder(this@FloatingService))
+            }
+            floater.setState(true)
         }
 
         val params = WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT,
@@ -82,36 +87,32 @@ class FloatingService : Service() {
     }
 
     private fun sentenceTest() {
-        val filename = Functions.getFilename(this, RECORD_FILENAME)
-        floater.statefulActionGUI {
+        launch(UI) {
+            floater.setState(false)
             toastShow("")
 
-            record(filename)
-            var word = recognise(filename, true)
-            while (!word.isEmpty()) {
-                sentence.add(word)
-                toastShow(sentence.joinToString(" "))
-                if (actionPerformer.perform(sentence)) {
+            val filename = Functions.getFilename(this@FloatingService, RECORD_FILENAME)
+            val sentence = mutableListOf<String>()
+            do {
+                floater.start(Constants.RECORD_DURATION)
+                val word = withContext(CommonPool) {
+                    audioRecorder.record(filename, Constants.RECORD_DURATION)
+                    recognise(filename, sentence.size == 0)
+                }
+                if (word.isEmpty()) {
                     break
                 }
-                record(filename)
-                word = recognise(filename, false)
-            }
+                sentence.add(word)
+                toastShow(sentence.joinToString(" "))
+            } while (!actionPerformer.perform(sentence))
 
-            sentence.clear()
+            floater.setState(true)
         }
-    }
-
-    private fun record(filename: String) {
-        floater.start(Constants.RECORD_DURATION)
-        audioRecorder.record(filename, Constants.RECORD_DURATION)
     }
 
     private fun toastShow(text: String) {
-        launch(UI) {
-            toast.setText(text)
-            toast.show()
-        }
+        toast.setText(text)
+        toast.show()
     }
 
     private external fun setup(folder: String)
