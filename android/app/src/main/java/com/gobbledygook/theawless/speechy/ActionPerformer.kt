@@ -16,8 +16,8 @@ import kotlin.math.min
 
 class ActionPerformer(private val context: Context) {
     fun perform(action: List<String>): Boolean {
-        if (action.size > 2) {
-            return false
+        if (action.size >= 2) {
+            return true
         }
         when (action) {
             listOf("bluetooth", "on") -> toggleBluetooth(true)
@@ -65,12 +65,12 @@ class ActionPerformer(private val context: Context) {
     }
 
     private fun openApp(code: String) {
-        context.startActivity(context.packageManager.getLaunchIntentForPackage(code))
+        context.startActivity(context.packageManager.getLaunchIntentForPackage(code).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     @SuppressLint("MissingPermission")
     private fun callPhone(phone: String) {
-        context.startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$phone")))
+        context.startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$phone")).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
     private fun handleMusic(mode: String) {
