@@ -1,9 +1,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/toggleItem"
-        android:actionViewClass="android.widget.CheckBox"
+        android:id="@+id/startItem"
+        android:icon="@android:drawable/ic_media_play"
         android:showAsAction="always"
-        android:title="@string/toggleItemTitle" />
+        android:title="@string/startItemTitle" />
 
 </menu>

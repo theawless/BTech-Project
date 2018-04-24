@@ -8,7 +8,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Menu
-import android.widget.CheckBox
+import android.view.MenuItem
 import android.widget.RadioButton
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity.*
@@ -76,7 +76,6 @@ class MainActivity : Activity() {
         }
     }
 
-    // only for testing purposes
     private external fun train(folder: String)
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -112,14 +111,16 @@ class MainActivity : Activity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.options, menu)
-        (menu.findItem(R.id.toggleItem).actionView as CheckBox).setOnCheckedChangeListener { _, checked ->
-            if (checked) {
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            R.id.startItem -> {
                 startService(Intent(applicationContext, FloatingService::class.java))
                 finish()
-            } else {
-                stopService(Intent(applicationContext, FloatingService::class.java))
             }
         }
-        return super.onCreateOptionsMenu(menu)
+        return super.onOptionsItemSelected(item)
     }
 }

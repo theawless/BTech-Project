@@ -3,8 +3,8 @@
 
     <string name="appName">Speechy</string>
     <string name="helpTextViewText">
-"Tick the checkbox above to start the floating service:
-    Duration of each word is 1.25 seconds
+"Press the play button above to start the floating service:
+    Duration of each word is 1.25 second
     Progress can be seen on the button
     Action will be performed if sentence matches
 
@@ -30,14 +30,15 @@ Following actions are supported:
 
 Improve recognition by adding more utterances:
     Select a word from the list
-    Press the icon
-    Record the word
+    Press the bottom icon
+    Record the word(s)
+    Long press the bottom icon to retrain
 
 More about the project here:
     https://github.com/theawless/sr-lib
     https://github.com/theawless/BTech-Project"
     </string>
-    <string name="toggleItemTitle">Service</string>
+    <string name="startItemTitle">Start</string>
     <string name="permissionNotGratedToast">Permissions not granted</string>
     <string name="helpTextViewTitle">Help</string>
     <string name="recordTextViewTitle">Record</string>
