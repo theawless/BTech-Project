@@ -25,11 +25,6 @@ class MainActivity : Activity() {
         private const val PERMISSIONS_STATUS_CODE = 200
     }
 
-    private val words by lazy {
-        val file = File(Functions.getFilename(this, "sr-lib.words"))
-        file.createNewFile()
-        file.readLines()
-    }
     private val wavRecorder = WavRecorder()
 
     init {
@@ -41,6 +36,12 @@ class MainActivity : Activity() {
         setContentView(R.layout.activity)
         requestPermissions()
         stopService(Intent(applicationContext, FloatingService::class.java))
+
+        val sentences = ActionPerformer(this).actions
+        val words = sentences.flatten().distinct()
+        File(Functions.getFilename(this, "sr-lib.config")).writeText("q_cache=false")
+        File(Functions.getFilename(this, "sr-lib.words")).writeText(words.joinToString("\n"))
+        File(Functions.getFilename(this, "sr-lib.sentences")).writeText(sentences.joinToString("\n") { it.joinToString(" ") })
 
         for (word in words) {
             val radio = RadioButton(this)

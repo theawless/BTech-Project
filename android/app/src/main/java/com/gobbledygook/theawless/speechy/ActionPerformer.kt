@@ -15,32 +15,60 @@ import kotlin.math.min
 
 
 class ActionPerformer(private val context: Context) {
+    val actions: List<List<String>>
+        get() {
+            return listOf(listOf("bluetooth", "on"),
+                          listOf("bluetooth", "off"),
+                          listOf("wifi", "on"),
+                          listOf("wifi", "off"),
+                          listOf("torch", "on"),
+                          listOf("torch", "off"),
+                          listOf("call", "home"),
+                          listOf("call", "emergency"),
+                          listOf("volume", "up"),
+                          listOf("volume", "down"),
+                          listOf("brightness", "up"),
+                          listOf("brightness", "down"),
+                          listOf("open", "browser"),
+                          listOf("open", "calendar"),
+                          listOf("music", "play"),
+                          listOf("music", "pause"),
+                          listOf("music", "next"),
+                          listOf("stop", "service"))
+        }
+
+    private val functions: List<() -> Unit>
+        get() {
+            return listOf({ toggleBluetooth(true) },
+                          { toggleBluetooth(false) },
+                          { toggleWiFi(true) },
+                          { toggleWiFi(false) },
+                          { toggleFlashLight(true) },
+                          { toggleFlashLight(false) },
+                          { callPhone("121") },
+                          { callPhone("100") },
+                          { changeAudio(AudioManager.ADJUST_RAISE) },
+                          { changeAudio(AudioManager.ADJUST_LOWER) },
+                          { changeBrightness(true) },
+                          { changeBrightness(false) },
+                          { openApp("com.android.chrome") },
+                          { openApp("com.google.android.calendar") },
+                          { handleMusic("play") },
+                          { handleMusic("pause") },
+                          { handleMusic("next") },
+                          { stopService() })
+        }
+
     fun perform(action: List<String>): Boolean {
+        val functionIndex = actions.indexOf(action)
+        if (functionIndex != -1) {
+            functions[functionIndex]()
+            return true
+        }
         if (action.size >= 2) {
             return true
         }
-        when (action) {
-            listOf("bluetooth", "on") -> toggleBluetooth(true)
-            listOf("bluetooth", "off") -> toggleBluetooth(false)
-            listOf("wifi", "on") -> toggleWiFi(true)
-            listOf("wifi", "off") -> toggleWiFi(false)
-            listOf("torch", "on") -> toggleFlashLight(true)
-            listOf("torch", "off") -> toggleFlashLight(false)
-            listOf("call", "home") -> callPhone("121")
-            listOf("call", "emergency") -> callPhone("100")
-            listOf("volume", "up") -> changeAudio(AudioManager.ADJUST_RAISE)
-            listOf("volume", "down") -> changeAudio(AudioManager.ADJUST_LOWER)
-            listOf("brightness", "up") -> changeBrightness(true)
-            listOf("brightness", "down") -> changeBrightness(false)
-            listOf("open", "browser") -> openApp("com.android.chrome")
-            listOf("open", "calendar") -> openApp("com.google.android.calendar")
-            listOf("music", "play") -> handleMusic("play")
-            listOf("music", "pause") -> handleMusic("pause")
-            listOf("music", "next") -> handleMusic("next")
-            listOf("stop", "service") -> stopService()
-            else -> return false
-        }
-        return true
+        return false
     }
 
     private fun toggleBluetooth(enable: Boolean) {
