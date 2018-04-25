@@ -171,8 +171,10 @@ public class Speechy extends JFrame {
         onWordClean();
         addToItemList(word, wordList);
         populateTextArea(wordList, textAreaWordList);
-        statefulActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
-        statefulActionGUI(() -> record(getFilenameUnderFolder(getWordFilename(word))), State.FOLDER_SET);
+        statefulActionGUI(() -> {
+            setup(getFolderName());
+            record(getFilenameUnderFolder(getWordFilename(word)));
+        }, State.FOLDER_SET);
     }
 
     private void onWordClean() {
@@ -212,8 +214,8 @@ public class Speechy extends JFrame {
         String words[] = sentence.split("\\s+");
         Arrays.stream(words).forEach((word) -> addToItemList(word, wordList));
         populateTextArea(wordList, textAreaWordList);
-        statefulActionGUI(() -> setup(getFolderName()), State.FOLDER_SET);
         statefulActionGUI(() -> {
+            setup(getFolderName());
             for (String word : words) {
                 addOutputMessage("Adding word: " + word);
                 record(getFilenameUnderFolder(getWordFilename(word)));
