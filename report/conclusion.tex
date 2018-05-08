@@ -1,4 +1,8 @@
 \chapter{Conclusion and Future Work} \label{ch:conclusion}
 
-It was noticed that the autocorrelation based phoneme segmentation is a slow algorithm for a real-time speech recognition system. We would like to improve phoneme segmentation by looking at other techniques. Our system did not use any sophisticated algorithms for template matching. We noticed that the system performed unsatisfactorily for changes in accents and environments. The main cause of this is the direct use of the cepstral coefficients; we would like to improve on that by using aligning techniques such as Dynamic Time Warping.
-Another improvement we can make in the system is by profiling the mobile user. It is generally seen that a there is a one to one correspondence between users and mobiles. Hence, we can save user's old recordings and improve our system continuously.
+Our speech recognition system gave satisfactory accuracy while also being real-time. It works well even with less amounts of training data. It can be used to make simple recognition systems for individual persons and command based devices like wheelchairs or home automation systems. With time, our system can be trained on the previously recognized recordings to improve the performance.
+
+Word recognition systems are easier to train and perform exceptionally well for simple tasks with less number of words.
+With increase in number of words though, the execution becomes slow as there are more models to match. Hence, word based speech recognition systems are not suitable for large vocabulary systems. For future work, a phoneme based recognition system like tri-phone system can be added to the library.
+
+The graphical user interface was very helpful for training. Feature for automatically dividing the dataset into train and test sets, and then finding accuracy can be added to the interface. Moreover, a brute-force approach can be used to select parameters like codebook size and number of HMM states from a set of pre-chosen values. The android application can be improved significantly by adding more actions and an artificial voice feedback.

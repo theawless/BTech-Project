@@ -1,76 +1,136 @@
 \chapter{Design and Implementation} \label{ch:proposal}
 
-\section{Preprocessing}
+\section{Speech Recognition Library}
 
-First, the signal is fixed for DC offset by subtracting the mean sample value, and normalized to a prechosen threshold. Then we trim the signals using the algorithm described in \cite{6778857}.
+The library is written in C++11 for its performance, familiarity and wide spread adoption including on android, iOS, and desktops. 
+C++11 and later versions provide smart pointers and a standard threading library which is important for portability. To aid building the library across various platforms, the CMake build system is used.
 
-The trimming algorithm uses short-time energy and zero crossing rates and it possesses a self-adapting nature towards the background acoustic environment. The energy is given by sum of magnitudes of samples near the window,
-\begin{equation} E(n) = \sum_w|s(n+i)| \end{equation}
+The speech recognition system works as given in the following flowchart:
 
-The threshold variables can be calculated as given in following equations \cite{6778857}.
-
-\begin{equation} I1 = 0.03 \times (IMX - IMN) + IMN \end{equation}
-\begin{equation} ITL = MIN(I1 , 4 \times IMN), ITU = 5 \times ITL \end{equation}
-    
 \begin{figure}[h!]
     \centering
-    \includegraphics[scale=1.0]{trim-algo-flowchart}
-    \label{fig:trim-algo-flowchart}
-    \caption{Trimming algorithm flowchart \cite{6778857}}
+    \includegraphics[scale=0.9]{training-flowchart}
+    \label{fig:training-flowchart}
+    \caption{Process flowchart}
 \end{figure}
 
-\section{Phoneme Segmentation using Pitch Period Analysis}
+The appendix describes each of the stages of this process in good detail along with code implementation examples.
 
-A speech signal can be classified into voiced, unvoiced and silence regions. There is no excitation during the silence region and majority of speech regions including vowels and semi vowels are voiced. We use \cite{1162765} to label the segments as voiced or unvoiced and then find their boundaries.
+The library is written such that its clients do not have to dive deep into the technicalities of speech recognition. It has been divided into two abstraction layers:
 
+\begin{enumerate}
+
+\item Base
+
+Provides implementation of various algorithms and techniques - Preprocessing, LPCC, MFCC, Derivative features, KMeans, LBG, HMM, NGram. Data objects - Codebook, Feature, Model, Gram are also described in this layer.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.8]{sr-lib-base}
+    \label{fig:sr-lib-base}
+    \caption{Architecture of Base}
+\end{figure}
+
+Scaling has been done wherever necessary to avoid the floating point errors, and various optimizations have been made whenever possible. 
+
+This layer is not parallelized and strictly does not interact with the input/output e.g. WAV audio or saving/loading the data objects to the file system.
+
+\item Word
+
+Provides training and testing interfaces. The clients of the library are only allowed to interact with this layer.
+This layer foresees construction and testing of HMM and NGram models. It implements handling inputs - WAV audio files, word list, sentence list, etc. It also implements functions to save and read generated data objects to and from the file system.
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.8]{sr-lib-word}
+    \label{fig:sr-lib-word}
+    \caption{Architecture of Word}
+\end{figure}
+
+This layer also handles the parallelization and configuration of the library.
+
+The following tasks are parallelized:
 \begin{itemize}
-\item Find peak signal threshold from the beginning background noise.
-\item Select segments of length 300 samples with a moving window of 100 samples.
-\item The segment is silence if peak signal level is below threshold.
-\item Find clipping level as a fixed percentage of the minimum of the maximum absolute values in the first and last 100 samples of segment.
-\item Clip the signal and then compute the autocorrelation function.
-\item Compare peak of autocorrelation function with the fixed threshold and classify the segment as unvoiced if the peak falls below, and as voiced if above.
+    \item Feature generation of multiple utterances
+    \item Generation of multiple word models using HMM
+    \item Matching of the input utterance with multiple word models
 \end{itemize}
 
-\section{Linear Predictive Coding Feature Extraction}
+\begin{table}[h!]
+    \centering
+    \begin{tabular}{lll}
+        Key          & Type &    Description \\ \hline
+        q\_cache     & bool &    whether cached training files should be used \\
+        n\_thread    & int &     number of threads used for parallel execution \\
+        q\_trim      & bool &    whether the samples should be trimmed for background noise \\
+        x\_frame     & int &     number of samples in a frame \\
+        x\_overlap   & int &     number of samples to be overlapped while framing \\
+        cepstra     & string &   mfc or lpc variants of feature generation \\
+        n\_cepstra   & int &     number of features \\
+        n\_predict   & int &     P of autocorrelation, only for lpc \\
+        q\_gain      & bool &    whether gain term should be added to features \\
+        q\_delta     & bool &    whether delta terms should be added to features \\
+        q\_accel     & bool &    whether accel terms should be added to features \\
+        x\_codebook  & int &     size of codebook \\
+        n\_state     & int &     number of states in HMM \\
+        n\_bakis     & int &     connectedness of initial bakis model for HMM \\
+        n\_retrain   & int &     number of times each model should be trained \\
+        n\_gram      & int &     number of previous words to be considered for prediction \\
+        q\_dfa       & bool &    command based word prediction or probability based \\
+        gram\_weight & double &  linear weight for the final scoring with recognition result \\
+        cutoff\_score & double &  cutoff for final score \\
+    \end{tabular}
+    \caption{Keys for the configuration}
+\end{table}
 
-Linear Predictive Coding is very useful for encoding high quality speech at a low bit rate and provides extremely accurate estimates of speech parameters. Its main advantage comes from the reference to a simplified vocal tract model and the analogy of a source-filter model with the speech production system.
+\end{enumerate}
 
-After cutting the phonetic units, we find out the linear predictive cepstral coefficients(LPCC) using the autocorrelation method from \cite{rabinerbook}. First, the phoneme is divided into overlapping segments, and then we apply a tapering window to each segment to hide the discontinuities.
+As this is a word based recognition system, the basic unit of recognition in the library is a word. During the training, HMM Models are generated for each word, and the probabilities of occurrence of the words are calculated by parsing the sentence list. These probabilities are saved as NGram or DFA models depending upon the configuration.
 
-\subsubsection{Autocorrelation Analysis}
+During testing, a sentence is input as a combination of words.
+For each word A in the sentence, and for each word B in the training data, following steps are taken:
+\begin{itemize}
+    \item Using HMM model of B find probability of occurrence of A.
+    \item Using NGram models, find probability of occurrence of B given A's position in the input sentence.
+    \item Final score is a linear combination of these two scores.
+\end{itemize}
+The word B with the maximum final score is best possible recognition. If its score is lesser than cutoff score, discard it, else output it.
 
-The next step is to find the autocorrelation for each frame of windowed signal with
+\section{Graphical User Interface for Training}
 
-\begin{equation} \sum_{n=0}^{n-1-m}{\tilde{x}_l(n)}{\tilde{x}_l(n+m)}, \quad \begin{aligned} m=0,1,...,p. \end{aligned} \end{equation} 
-
-\subsubsection{LPC Analysis}
-The p + 1 autocorrelations are mutated to LPC coefficients by using Durbin’s method:
-\begin{equation} E^{(0)} = R(0) \end{equation}
-\begin{equation} k_i = \dfrac{R(i) - \sum_{j=1}^{i-1}\alpha_j^{i-1}R(|i-j|)}{E^{i-1}},  \quad \begin{aligned} 1 \leq i \leq p. \end{aligned} \end{equation}
-\begin{equation} \alpha_i^{(i)} = k_i \end{equation}
-\begin{equation}\alpha_j^{(i)} = \alpha_i^{(i-1)} - k_i\alpha_{i-1}^{(i-1)},   \quad \begin{aligned} 1 \leq j \leq i-1. \end{aligned}\end{equation}
-\begin{equation} E^{i} = (1-k_i^2)E^{i-1} \end{equation}
-
-In the last step, the LPC cepstral coefficients are derived from the LPC coefficients. A sine window is applied over the cepstral coefficients to desensitize them towards noise and noise like sounds. 
+The desktop graphical user interface is written in Swing Java framework. The interface can be run on Windows or Linux based OSes. It uses the Java Native Interface (JNI) for communicating with the speech recognition library.
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[scale=1]{lpc-code}
-    \label{fig:lpc-code}
-    \caption{Linear predictive coding implementation}
+    \includegraphics[scale=0.85]{desktop-screenshot}
+    \label{fig:desktop-screenshot}
+    \caption{Graphics User Interface for Training}
 \end{figure}
+
+\newpage
+
+The interface has been made intuitive. Buttons are enabled only when required. For example, Test and Clean button will not be available until training is finished. At any moment only one task can be performed from the interface, and data race conditions between GUI and IO are avoided. The system is completely asynchronous and does not block the user interface.
+
+\section{Voice Controlled Assistant for Android}
+
+The android application is written in Kotlin and uses the Android NDK to run the speech recognition library.
+The design of this application is inspired by Facebook Messenger chat heads. The main button is controlled by a service class that runs in the background. The main button is completely movable over the screen. It displays a round progress bar of the recording being done. A single click on the button starts recording for a sentence and user is expected to speak. A message toast is shown with every recognized word. If the recognition results match the list of actions, the corresponding action is performed. Currently, the application supports the following actions:
+\begin{itemize}
+    \item Open applications
+    \item Enable/disable Bluetooth
+    \item Control music player
+    \item Enable/disable Wi-Fi
+    \item Make phone calls
+    \item Control brightness        
+    \item Enable/disable torch
+    \item Control volume
+\end{itemize}
 
 \begin{figure}[h!]
     \centering
-    \includegraphics[scale=1]{durbin-code}
-    \label{fig:durbin-code}
-    \caption{Durbin solve implementation}
+    \includegraphics[scale=0.9]{android-screenshot}
+    \label{fig:android-screenshot}
+    \caption{Android Voice Controlled Assistant}
 \end{figure}
 
-
-\section{Template Matching}
-
-We use Tohkura Distance for finding the distance between coefficients. The measure is a statistically weighted distance measure with weights equal to the inverse variance of the cepstral coefficients \cite{1165058}.
-
-The coefficients are the templates for recognising digits. We generate the training coefficients for each phoneme in each utterance. When we get the test signal, we apply the same preprocessing and feature extraction to get the test coefficients for each phoneme of the test signal. Then for each phoneme unit from test signal, we find its distance with respect to each phoneme unit in our training data using their coefficients. We output the digit, which gives the least average distance for all its phonemes.
+The application makes extensive use of Kotlin’s co-routines to provide responsive GUI feedback. With the architecture of the application, more actions can be added with ease. To improve accuracy, the application also saves the recordings that are recognized so they can be trained by connecting to the desktop.

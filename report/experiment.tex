@@ -1,46 +1,57 @@
-\chapter{Experiment} \label{ch:experiment}
+\chapter{Experiment and Observation} \label{ch:experiment}
 
-We obtained the dataset of spoken digits, 15 utterances for each person per digit, and 3 persons in total. The recordings were done in moderately quiet environments using a general-purpose microphone.
+We obtained two datasets for the purpose of experimentation - digits dataset of 15 utterances per digit, and commands (for the android project) dataset with 25 utterances per word. The recordings were done in moderately quiet environments using a general-purpose microphone.
 
-For the obtained dataset, the trimming algorithm presented exceptionally accurate results. The results were close to 88\% for the error of speech signal's endpoints missing by 100ms.
+For the obtained datasets, the trimming algorithm presented very accurate results. The results were close to 88\% for the error of speech signal's endpoints missing by 100ms.
 
 \begin{figure}
     \centering
-    \includegraphics[scale=0.7]{nine-trim}
-    \label{fig:nine-trim}
-    \caption{Automatic trimming of Nine}
+    \includegraphics[scale=0.7]{graph-nine-trim}
+    \label{fig:graph-nine-trim}
+    \caption{Automatic trimming of nine}
 \end{figure}
 
-\begin{minipage}{0.6\textwidth}
-    \begin{figure}[H]
-        \includegraphics[scale=0.9]{zero-phoneme-segmentation}
-        \caption{Phoneme segmentation of Zero}
-        \label{fig:zero-phoneme-segementation}
-    \end{figure}
-    \end{minipage} \hfill
-    \begin{minipage}{0.5\textwidth}
-        The figure \ref{fig:zero-phoneme-segementation} shows the utterance of zero in which phoneme segmentation gives good result. For many other utterances, our implementation gave erratic results. The problem was seen to be an improper choice of voiced/unvoiced threshold, hence there were few small unvoiced segments between long stretches of voiced segments. This behaviour caused a major decrease (from 77\% down to 69\%) in the accuracy of the system as can be seen by the tables below.
-        We also notice that due to the calculation of autocorrelation function, phoneme segmentation was approximately a ~5 second operation for each utterance. This would make it unsatisfactory for real-time use.
-\end{minipage}
+\begin{figure}
+    \centering
+    \includegraphics[scale=0.7]{graph-codebook-size}
+    \label{fig:graph-codebook-size}
+    \caption{Codebook size vs Accuracy}
+\end{figure}
 
-\begin{center}
-\begin{table}[]
+\begin{figure}
     \centering
-    \begin{tabular}{@{}lllllllllll@{}}
-    \cmidrule(l){2-11}
-    Digit    & 0  & 1  & 2  & 3  & 4  & 5  & 6  & 7  & 8  & 9  \\ \cmidrule(l){2-11} 
-    Accuracy & 62 & 80 & 86 & 64 & 95 & 77 & 73 & 73 & 86 & 82 \\ \cmidrule(l){2-11} 
-    \end{tabular}
-    \caption{Accuracy without using phoneme segmentation}
-    \end{table}
-\end{center}
-\begin{table}[]
+    \includegraphics[scale=0.7]{graph-hidden-states}
+    \label{fig:graph-hidden-states}
+    \caption{Number of hidden states vs Accuracy}
+\end{figure}
+
+It was observed that for the two datasets, different configurations were necessary. The accuracy of digits dataset decreased if delta or delta delta features were added; on the contrary, it increased for commands dataset. The optimal codebook size and the number of HMM states were higher for commands dataset compared to digits dataset. Moreover, bakis model with more jumps improved the performance for commands dataset.
+
+\hfill
+
+\begin{table}[H]
     \centering
-    \begin{tabular}{@{}lllllllllll@{}}
-    \cmidrule(l){2-11}
-    Digit    & 0  & 1  & 2  & 3  & 4  & 5  & 6  & 7  & 8  & 9  \\ \cmidrule(l){2-11} 
-    Accuracy & 73 & 46 & 66 & 73 & 66 & 80 & 53 & 80 & 86 & 66 \\ \cmidrule(l){2-11} 
+    \begin{tabular}{lll}
+    \hline
+    Description           & Digits dataset & Commands dataset \\
+    \hline
+    Number of words       &  10     & 21 \\
+    Number of utterances  &  150    & 525 \\
+    \hline
+    Delta features        &  No     & Yes \\
+    Delta delta feautres  &  No     & Yes \\
+    Codebook size         &  16  & 128 \\
+    Number of hidden states  &  10 & 15 \\
+    Initial feed forward connectedness &  1 & 3 \\
+    \hline
+    Training time (s)     &  3.3 & 7.4 \\
+    Recognition time (ms) &  8  & 9 \\
+    Accuracy (\%)         &  94 & 73 \\
+    \hline
     \end{tabular}
-    \caption{Accuracy with using phoneme segmentation}
-    \end{table}
-            
+    \caption{Results of speech recognition}
+\end{table}   
+
+For profiling the library on a desktop, Visual Studio Profiler was used and a Intel Corei7 3.0GHz + 8GB RAM laptop was selected. During training, the maximum CPU usage increased up to 80\% while the maximum RAM usage was below 20MB for our datasets.
+
+For profiling the android application, Android Studio Profiler was used and an octa-core 1.7GHz + 2GB RAM mobile phone was selected. During testing, the maximum CPU usage increased up to 50\% while the RAM stayed constant at 12MB. The average recognition time for input utterances was 15ms.
