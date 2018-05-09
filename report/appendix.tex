@@ -9,6 +9,8 @@ This step is done to avoid the variations in amplitude between sound recordings 
 This step is necessary to save computational resources from being spent on unvoiced parts of the signal. Hence, silent parts of the signal should be removed. The trimming is done using the algorithm in \cite{Saha_anew}. This algorithm uses the background noise features to set thresholds, hence no need to assume any ad-hoc values. If $d$ (Mahalanobis distance) of a sample comes out to be lesser than 3, it is rejected. $b_{mean}, b_{sd}$ are the Gaussian parameters of the background noise.
 \begin{equation*} d = x - b_{mean} / b_{sd} \end{equation*}
 
+\newpage
+
 \subsubsection{Pre-emphasis}
 Due to the nature of the glottal impulse, the human speech has more energy in the lower frequencies. Hence, the signal is applied with pre emphasis filter (a first order high pass filter) that boosts the higher frequencies.
 \begin{equation*} x_i = x_i - \alpha x_{i-1} \end{equation*}
