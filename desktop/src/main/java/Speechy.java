@@ -116,6 +116,15 @@ public class Speechy extends JFrame {
         setting = new File(folder, "sr-lib.config");
         wordList = new File(folder, "sr-lib.words");
         sentenceList = new File(folder, "sr-lib.sentences");
+        try {
+            train_folder.mkdirs();
+            model_folder.mkdirs();
+            setting.createNewFile();
+            wordList.createNewFile();
+            sentenceList.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         populateTextArea(setting, textAreaSetting);
         populateTextArea(wordList, textAreaWordList);
         populateTextArea(sentenceList, textAreaSentenceList);
@@ -124,11 +133,6 @@ public class Speechy extends JFrame {
 
     private void onSettingSet() {
         addOutputMessage("Setting setting");
-        try {
-            setting.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         try (FileWriter fileWriter = new FileWriter(setting)) {
             fileWriter.write(textAreaSetting.getText().trim());
         } catch (IOException e) {
@@ -166,7 +170,6 @@ public class Speechy extends JFrame {
     }
 
     private void onWordAdd() {
-        train_folder.mkdirs();
         String word = textFieldWord.getText();
         if (word.isEmpty()) {
             return;
@@ -189,7 +192,6 @@ public class Speechy extends JFrame {
 
     private void onWordTrain() {
         addOutputMessage("Training word");
-        model_folder.mkdirs();
         statefulActionGUI(this::wordTrain);
     }
 
@@ -203,7 +205,6 @@ public class Speechy extends JFrame {
     }
 
     private void onSentenceAdd() {
-        train_folder.mkdirs();
         String sentence = textFieldSentence.getText();
         if (sentence.isEmpty()) {
             return;
@@ -233,7 +234,6 @@ public class Speechy extends JFrame {
 
     private void onSentenceTrain() {
         addOutputMessage("Training sentence");
-        model_folder.mkdirs();
         statefulActionGUI(this::sentenceTrain);
     }
 
@@ -298,16 +298,10 @@ public class Speechy extends JFrame {
     }
 
     private void addToItemList(String item, File itemList) {
-        try {
-            itemList.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(itemList))) {
             if (bufferedReader.lines().noneMatch(item::matches)) {
                 try (FileWriter fileWriter = new FileWriter(itemList, true)) {
-                    // do not add line separator new file
+                    // do not add new line because it is a new file
                     fileWriter.write((itemList.length() == 0 ? "" : '\n') + item);
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -319,12 +313,6 @@ public class Speechy extends JFrame {
     }
 
     private void populateTextArea(File file, JTextArea textArea) {
-        try {
-            file.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         textArea.setText("");
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(file))) {
             bufferedReader.lines().forEach((line) -> textArea.append(line + '\n'));
@@ -356,11 +344,11 @@ public class Speechy extends JFrame {
             switch (endState) {
                 case AUTO:
                     boolean wordTrainable = checkFile(wordList) && train_folder.listFiles((f, p) -> p.matches(".*\\." + wavRecorder.getExtension())).length > 0;
-                    boolean wordTrained = checkFile(wordList) && checkFile(new File(model_folder, "0.model"));
+                    boolean wordTrained = checkFile(new File(model_folder, "0.model"));
                     boolean sentenceTrainable = checkFile(sentenceList);
-                    boolean sentenceTrained = wordTrained && checkFile(sentenceList) && checkFile(new File(model_folder, "0.gram"));
+                    boolean sentenceTrained = checkFile(new File(model_folder, "0.gram"));
 
-                    buttonSentenceTest.setEnabled(sentenceTrained);
+                    buttonSentenceTest.setEnabled(wordTrained && sentenceTrained);
                     buttonSentenceTrain.setEnabled(sentenceTrainable);
                     buttonSentenceClean.setEnabled(sentenceTrained);
                     buttonSentenceAdd.setEnabled(true);
